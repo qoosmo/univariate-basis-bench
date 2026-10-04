@@ -1,0 +1,22 @@
+[package]
+name = "univariate-basis-bench"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Rust benchmarks for univariate polynomial bases used in ZK provers: monomial, Lagrange/evaluation, and Boolean-kernel basis."
+
+[dependencies]
+rayon = "1.10"
+rand = { version = "0.8", features = ["std_rng"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "eval"
+harness = false
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+panic = "abort"

@@ -96,7 +96,8 @@ pub fn from_monomial(monomial: &[F]) -> Vec<F> {
         let bit = 1usize << i;
         for z in 0..n {
             if z & bit == 0 {
-                c[z] -= c[z | bit];
+                let rhs = c[z | bit];
+                c[z] -= rhs;
             }
         }
     }

@@ -80,12 +80,134 @@ pub fn eval_parallel_reuse(coeffs: &[F], x: F, parallel_threshold: usize) -> F {
 }
 
 
+/// In-place parallel kernel tree.
+///
+/// Unlike `eval_parallel`, this performs no per-level allocation.
+/// At level i, each independent chunk of size 2^(i+1) stores its
+/// folded result in chunk[0].
+pub fn eval_parallel_in_place(
+    coeffs: &[F],
+    x: F,
+    parallel_threshold: usize,
+) -> F {
+    assert!(coeffs.len().is_power_of_two());
+
+    if coeffs.len() == 1 {
+        return coeffs[0];
+    }
+
+    let mut buf = coeffs.to_vec();
+    let n = buf.len();
+
+    let mut span = 2usize;
+    let mut t = x;
+
+    loop {
+        let half = span / 2;
+        let independent_chunks = n / span;
+
+        if independent_chunks >= parallel_threshold {
+            buf.par_chunks_mut(span).for_each(|chunk| {
+                let a = chunk[0];
+                let b = chunk[half];
+                chunk[0] = t * (a + b) + b;
+            });
+        } else {
+            for chunk in buf.chunks_mut(span) {
+                let a = chunk[0];
+                let b = chunk[half];
+                chunk[0] = t * (a + b) + b;
+            }
+        }
+
+        if span == n {
+            break;
+        }
+
+        span *= 2;
+        t = t.square();
+    }
+
+    buf[0]
+}
+
+
 /// Convert monomial coefficients a_e to kernel coefficients c_y.
 ///
 /// For N=2^m and M=N-1,
 ///   a_e = sum_{y superset (M xor e)} c_y.
 /// Thus after bit-complementing the monomial index, this is an inverse
 /// superset-zeta (Boolean Möbius) transform.
+
+/// Coarse-grained parallel kernel evaluation.
+///
+/// The coefficient array is split into contiguous power-of-two subtrees.
+/// Each Rayon worker reduces one complete subtree locally, avoiding a
+/// global synchronization barrier at every kernel-tree level.
+pub fn eval_parallel_subtrees(
+    coeffs: &[F],
+    x: F,
+    block_size: usize,
+) -> F {
+    assert!(coeffs.len().is_power_of_two());
+    assert!(block_size.is_power_of_two());
+
+    let block_size = block_size.min(coeffs.len());
+
+    if coeffs.len() <= block_size {
+        return eval_serial(coeffs, x);
+    }
+
+    let total_levels = coeffs.len().trailing_zeros() as usize;
+    let local_levels = block_size.trailing_zeros() as usize;
+
+    // t_i = x^(2^i)
+    let mut ts = Vec::with_capacity(total_levels);
+    let mut t = x;
+    for _ in 0..total_levels {
+        ts.push(t);
+        t = t.square();
+    }
+
+    // Reduce each contiguous subtree independently.
+    let mut roots: Vec<F> = coeffs
+        .par_chunks(block_size)
+        .map(|chunk| {
+            let mut buf = chunk.to_vec();
+            let mut len = block_size;
+
+            for &level_t in &ts[..local_levels] {
+                let pairs = len / 2;
+
+                for j in 0..pairs {
+                    let a = buf[2 * j];
+                    let b = buf[2 * j + 1];
+                    buf[j] = level_t * (a + b) + b;
+                }
+
+                len = pairs;
+            }
+
+            buf[0]
+        })
+        .collect();
+
+    // Finish the small top tree serially.
+    for &level_t in &ts[local_levels..] {
+        let pairs = roots.len() / 2;
+
+        for j in 0..pairs {
+            let a = roots[2 * j];
+            let b = roots[2 * j + 1];
+            roots[j] = level_t * (a + b) + b;
+        }
+
+        roots.truncate(pairs);
+    }
+
+    roots[0]
+}
+
 pub fn from_monomial(monomial: &[F]) -> Vec<F> {
     assert!(monomial.len().is_power_of_two());
     let n = monomial.len();
@@ -133,6 +255,21 @@ mod tests {
     }
 
     #[test]
+    fn parallel_in_place_matches_serial() {
+        let c: Vec<F> = (0..65536)
+            .map(|i| F::from_canonical_u64((i * 17 + 3) as u64))
+            .collect();
+
+        let x = F::from_canonical_u64(19);
+
+        assert_eq!(
+            eval_serial(&c, x),
+            eval_parallel_in_place(&c, x, 2048)
+        );
+    }
+
+
+    #[test]
     fn monomial_conversion_preserves_polynomial() {
         let a: Vec<F> = (0..16).map(|i| F::from_canonical_u64((i * 11 + 5) as u64)).collect();
         let c = from_monomial(&a);
@@ -141,4 +278,25 @@ mod tests {
             assert_eq!(monomial::eval_horner(&a, x), eval_serial(&c, x));
         }
     }
+
+    #[test]
+    fn parallel_subtrees_matches_serial() {
+        let coeffs: Vec<F> = (0..65536)
+            .map(|i| F::from_canonical_u64((i as u64).wrapping_mul(17).wrapping_add(3)))
+            .collect();
+
+        let x = F::from_canonical_u64(19);
+
+        let expected = eval_serial(&coeffs, x);
+
+        for block_size in [512usize, 1024, 2048, 4096, 8192, 16384] {
+            assert_eq!(
+                expected,
+                eval_parallel_subtrees(&coeffs, x, block_size),
+                "block_size={block_size}"
+            );
+        }
+    }
+
+
 }

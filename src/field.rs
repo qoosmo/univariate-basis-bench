@@ -24,7 +24,33 @@ impl F {
 
     #[inline(always)]
     pub fn new(x: u128) -> Self {
-        Self((x % Self::MODULUS as u128) as u64)
+        Self(Self::reduce_u128(x))
+    }
+
+    #[inline(always)]
+    fn reduce_u128(x: u128) -> u64 {
+        // Goldilocks:
+        // p = 2^64 - 2^32 + 1
+        // therefore 2^64 = 2^32 - 1 (mod p).
+        const C: u128 = (1u128 << 32) - 1;
+        const MASK: u128 = (1u128 << 64) - 1;
+
+        let lo = x & MASK;
+        let hi = x >> 64;
+
+        let y = lo + hi * C;
+
+        let lo2 = y & MASK;
+        let hi2 = y >> 64;
+
+        let mut z = lo2 + hi2 * C;
+
+        let p = Self::MODULUS as u128;
+        if z >= p {
+            z -= p;
+        }
+
+        z as u64
     }
 
     #[inline(always)]
@@ -70,7 +96,14 @@ impl Add for F {
     type Output = Self;
     #[inline(always)]
     fn add(self, rhs: Self) -> Self {
-        Self::new(self.0 as u128 + rhs.0 as u128)
+        let sum = self.0 as u128 + rhs.0 as u128;
+        let p = Self::MODULUS as u128;
+
+        if sum >= p {
+            Self((sum - p) as u64)
+        } else {
+            Self(sum as u64)
+        }
     }
 }
 impl AddAssign for F {
@@ -100,7 +133,9 @@ impl Neg for F {
 impl Mul for F {
     type Output = Self;
     #[inline(always)]
-    fn mul(self, rhs: Self) -> Self { Self::new(self.0 as u128 * rhs.0 as u128) }
+    fn mul(self, rhs: Self) -> Self {
+        Self(Self::reduce_u128(self.0 as u128 * rhs.0 as u128))
+    }
 }
 impl MulAssign for F {
     #[inline(always)]

@@ -1,0 +1,159 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Polynomial arithmetic is a central computational component of modern
+zero-knowledge proof systems. Provers manipulate large polynomials during
+arithmetization, constraint evaluation, low-degree testing, polynomial
+commitment, quotient construction, and opening procedures. Transparent
+proof systems based on Reed--Solomon proximity testing, including
+FRI-based constructions and STARKs, make polynomial evaluation and encoding
+particularly visible components of the prover computation
+\cite{stark2018}.
+
+The representation chosen for a polynomial determines the cost of many of
+these operations. A polynomial may be represented by its monomial
+coefficients, by its values on a structured evaluation domain, or by
+coefficients in another basis adapted to a particular algebraic operation.
+These representations describe the same polynomial space but expose
+different arithmetic structure and different opportunities for
+parallelism.
+
+This work isolates one basic operation:
+\begin{quote}
+Given a degree-\(<N\) univariate polynomial \(P\) and an arbitrary point
+\(x\) in the base field, compute \(P(x)\) from the chosen representation.
+\end{quote}
+
+We deliberately study this primitive independently of a complete proof
+system. This allows the effect of the representation itself to be measured
+under a common field implementation, machine, input size, and benchmarking
+methodology.
+
+Let
+\[
+N=2^m.
+\]
+In addition to the monomial representation and a roots-of-unity
+Lagrange/evaluation representation, we study the following family of
+univariate polynomials:
+\[
+K_y(X)
+=
+\prod_{i=0}^{m-1}
+\left(X^{2^i}+y_i\right),
+\qquad
+y=(y_0,\ldots,y_{m-1})\in\{0,1\}^m.
+\]
+We refer to this family as the \emph{Boolean-kernel basis}. A polynomial
+represented in this basis is written
+\[
+P(X)
+=
+\sum_{y\in\{0,1\}^m}
+c_y K_y(X).
+\]
+
+The basis admits a simple binary reduction rule. Fix an evaluation point
+\(x\), and define
+\[
+t_i=x^{2^i}.
+\]
+At level \(i\), two coefficients \(a\) and \(b\) whose indices differ only
+in bit \(i\) are replaced by
+\[
+F_{t_i}(a,b)
+=
+t_i(a+b)+b.
+\]
+Applying this rule recursively reduces \(N\) coefficients to the single
+value \(P(x)\). The full tree contains exactly \(N-1\) folds, and all
+folds at the same level are independent.
+
+This structure makes the evaluation algorithm both linear in the number of
+input coefficients and naturally parallel. Since an arbitrary coefficient
+vector must in general be inspected in full, an \(O(N)\) algorithm already
+has optimal asymptotic input complexity for this task. The relevant
+question is therefore whether the basis gives a practically favorable
+constant factor and memory-access pattern.
+
+We answer this experimentally using a Rust implementation over the
+Goldilocks field
+\[
+\mathbb{F}_p,
+\qquad
+p=2^{64}-2^{32}+1.
+\]
+The optimized implementation combines coarse-grained subtree parallelism,
+a specialized Goldilocks reduction, a fused kernel-fold operation,
+bounds-check-free inner loops, direct first-level reduction, and
+worker-local reusable scratch storage.
+
+For
+\[
+N=2^{20}=1{,}048{,}576,
+\]
+on the tested Apple M1 machine, the optimized Boolean-kernel evaluator
+achieves a median runtime of
+\[
+\boxed{892.57\,\mu\mathrm{s}}
+\]
+and a throughput of approximately
+\[
+\boxed{1.175\times10^9}
+\]
+input coefficients per second.
+
+Under the same field implementation and benchmark machine, our parallel
+blocked monomial evaluator requires approximately \(1.70\)--\(1.75\)
+milliseconds at the same size. The measured Boolean-kernel implementation
+therefore uses approximately \(1/1.9\) of the wall-clock time of this
+parallel monomial baseline, i.e. it achieves about \(1.9\times\) the
+evaluation throughput.
+
+This comparison is intentionally an operation-level result. It does
+\emph{not} imply a \(1.9\times\) speedup for a complete STARK, FRI prover,
+or polynomial commitment scheme. A complete protocol also contains
+encoding, low-degree extension, hashing, commitment, transcript, query,
+and other polynomial operations, and a change of representation may create
+conversion costs elsewhere. The result instead establishes that
+representation alone can materially change the cost of arbitrary-point
+evaluation and motivates studying whether this basis can be maintained
+across a larger fraction of a prover pipeline.
+
+Related work on transparent proof systems already demonstrates the
+importance of linear- and quasi-linear-time polynomial machinery
+\cite{stark2018}. Other polynomial commitment constructions have also
+highlighted the cost of moving between polynomial representations; for
+example, Zeromorph explicitly addresses interactions between multilinear
+polynomials and univariate commitment machinery \cite{zeromorph2023}.
+Our scope is different: we experimentally isolate a univariate basis and
+measure its effect on a concrete polynomial operation.
+
+\paragraph{Contributions.}
+The contributions of this work are:
+\begin{enumerate}
+    \item We give a direct binary-fold evaluation algorithm for the
+    univariate Boolean-kernel basis and derive its exact arithmetic cost.
+
+    \item We provide an optimized Rust implementation over the Goldilocks
+    field with correctness tests and reproducible benchmarks.
+
+    \item We compare single-point evaluation against conventional
+    univariate representations under a common implementation methodology,
+    including a parallel monomial baseline rather than an artificially
+    serialized competitor.
+
+    \item We provide an optimization ablation covering arithmetic reduction,
+    memory organization, bounds checks, scratch-buffer reuse, subtree size,
+    and unsuccessful tree-fusion strategies.
+
+    \item We distinguish primitive-level speedups from end-to-end
+    proof-system claims and identify the representation-conversion and
+    integration questions that must be resolved before transferring the
+    result to a complete prover.
+\end{enumerate}
+
+The remainder of the paper first defines the polynomial representations
+formally, then derives the Boolean-kernel evaluation algorithm, describes
+the implementation and benchmark methodology, reports the experimental
+results, and discusses implications for proof-system design.

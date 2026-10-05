@@ -1,0 +1,58 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{hyperref}
+\IfFileExists{cleveref.sty}{\usepackage[nameinlink,noabbrev]{cleveref}}{}
+
+\title{Fast Single-Point Evaluation of Univariate Polynomials\\
+in the Boolean-Kernel Basis}
+
+\author{Ali Mkhida\\
+Algorizk Labs}
+
+\date{\today}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We study single-point evaluation of large univariate polynomials represented
+in a Boolean-kernel basis and compare it with conventional univariate
+representations relevant to zero-knowledge proof systems. For
+\(N=2^m\), the basis is indexed by \(y\in\{0,1\}^m\) and defined by
+\[
+K_y(X)=\prod_{i=0}^{m-1}\left(X^{2^i}+y_i\right).
+\]
+Its structure gives a binary evaluation tree whose elementary fold is
+\[
+(a,b)\longmapsto t(a+b)+b,
+\qquad t=x^{2^i}.
+\]
+We implement and optimize this evaluator over the Goldilocks field.
+For \(N=2^{20}\) on an Apple M1 processor, the optimized implementation
+reaches a measured median runtime of \(892.57\,\mu\mathrm{s}\), corresponding
+to approximately \(1.175\) billion input coefficients per second.
+Under the same benchmark methodology, this is approximately \(1.9\times\)
+faster than our parallel blocked monomial baseline for arbitrary
+single-point evaluation. We describe the evaluation algorithm, its exact
+arithmetic cost, the implementation optimizations responsible for the
+measured speedup, and the limitations of transferring this primitive-level
+gain to complete proof systems.
+\end{abstract}
+
+\input{sections/01-introduction}
+
+\bibliographystyle{alpha}
+\bibliography{references}
+
+\end{document}

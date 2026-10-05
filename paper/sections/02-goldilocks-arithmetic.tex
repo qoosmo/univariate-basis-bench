@@ -1,0 +1,357 @@
+\section{Goldilocks Field Arithmetic}
+\label{sec:goldilocks}
+
+The polynomial evaluation methods of Section~\ref{sec:poly-eval} ultimately
+depend on the cost of field multiplication.  We therefore separate the
+choice of polynomial representation from the choice of modular
+multiplication algorithm.
+
+The experiments use the Goldilocks prime
+\[
+p=2^{64}-2^{32}+1.
+\]
+A field element is represented by one machine word.  Two multiplication
+strategies are considered.  The first exploits the special form of the
+modulus.  The second uses Montgomery representation with radix
+\[
+R=2^{64}.
+\]
+The purpose of considering both is not to assume in advance that one is
+preferable, but to determine experimentally how the modular multiplication
+algorithm changes the cost of the polynomial evaluators.
+
+\subsection{Reduction Specialized to the Goldilocks Modulus}
+\label{sec:goldilocks-special}
+
+Let
+\[
+z=ab
+\]
+be the \(128\)-bit product of two canonical residues
+\[
+0\le a,b<p.
+\]
+Write
+\[
+z=z_{\mathrm{lo}}+2^{64}z_{\mathrm{hi}},
+\]
+where
+\[
+0\le z_{\mathrm{lo}},z_{\mathrm{hi}}<2^{64}.
+\]
+
+For the Goldilocks prime,
+\[
+2^{64}\equiv 2^{32}-1\pmod p.
+\]
+Define
+\[
+\varepsilon=2^{32}-1.
+\]
+Then
+\[
+z
+\equiv
+z_{\mathrm{lo}}+\varepsilon z_{\mathrm{hi}}
+\pmod p.
+\]
+
+A direct application of this congruence already reduces the \(128\)-bit
+product to a value close to one machine word.  A more useful form is
+obtained by splitting the high half as
+\[
+z_{\mathrm{hi}}
+=
+h_0+2^{32}h_1,
+\qquad
+0\le h_0,h_1<2^{32}.
+\]
+Since
+\[
+2^{32}\varepsilon
+=
+2^{64}-2^{32}
+\equiv -1
+\pmod p,
+\]
+we obtain
+\[
+\varepsilon z_{\mathrm{hi}}
+\equiv
+h_0\varepsilon-h_1
+\pmod p.
+\]
+Therefore
+\[
+z
+\equiv
+z_{\mathrm{lo}}
+-h_1
++h_0(2^{32}-1)
+\pmod p.
+\]
+
+This expression involves only the \(128\)-bit product \(ab\), extraction of
+the two \(32\)-bit halves of \(z_{\mathrm{hi}}\), shifts, additions, and
+subtractions, followed by a small number of corrections to return to the
+canonical interval.
+
+The implementation used in the benchmark follows this reduction rather than
+a generic integer remainder instruction.
+
+\paragraph{Algorithm 1. Goldilocks multiplication.}
+
+\[
+\begin{array}{ll}
+\textbf{Input:} & a,b\in[0,p),\\
+\textbf{Output:} & ab\bmod p.
+\end{array}
+\]
+
+\[
+\begin{array}{rcl}
+z &\leftarrow& a\cdot b \qquad\text{(full \(128\)-bit product)},\\
+z_{\mathrm{lo}} &\leftarrow& z\bmod 2^{64},\\
+z_{\mathrm{hi}} &\leftarrow& \lfloor z/2^{64}\rfloor,\\
+h_0 &\leftarrow& z_{\mathrm{hi}}\bmod 2^{32},\\
+h_1 &\leftarrow& \lfloor z_{\mathrm{hi}}/2^{32}\rfloor,\\
+u &\leftarrow& z_{\mathrm{lo}}-h_1+h_0(2^{32}-1),\\
+u &\leftarrow& \text{canonical reduction of }u\text{ modulo }p,\\
+\textbf{return}&&u.
+\end{array}
+\]
+
+The exact instruction sequence generated from this formula depends on the
+compiler and target architecture.  For this reason the multiplication is
+measured separately before its effect on the complete polynomial evaluator
+is considered.
+
+\subsection{Montgomery Representation}
+\label{sec:montgomery}
+
+Montgomery multiplication replaces division by \(p\) with arithmetic modulo
+a power of two.  Let
+\[
+R=2^{64}.
+\]
+Because \(p\) is odd,
+\[
+\gcd(p,R)=1,
+\]
+and \(R\) is invertible modulo \(p\).
+
+A canonical field element \(a\) is represented in Montgomery form by
+\[
+\widetilde{a}=aR\bmod p.
+\]
+Multiplication of two Montgomery residues produces
+\[
+\widetilde{a}\widetilde{b}
+=
+abR^2
+\]
+and is followed by a Montgomery reduction, which removes one factor of
+\(R\):
+\[
+\operatorname{REDC}
+\left(
+\widetilde{a}\widetilde{b}
+\right)
+=
+abR\bmod p.
+\]
+
+For the modulus considered here, the constants are
+\[
+R\bmod p
+=
+2^{32}-1
+=
+\mathtt{0x00000000ffffffff},
+\]
+\[
+n'=-p^{-1}\bmod R
+=
+\mathtt{0xfffffffeffffffff},
+\]
+and
+\[
+R^2\bmod p
+=
+\mathtt{0xfffffffe00000001}.
+\]
+
+The value \(R^2\bmod p\) is used to convert a canonical residue into
+Montgomery form with one Montgomery multiplication.
+
+\subsection{Montgomery Reduction}
+\label{sec:montgomery-redc}
+
+Let
+\[
+0\le T<pR.
+\]
+The Montgomery reduction computes
+\[
+TR^{-1}\bmod p
+\]
+without an integer division by \(p\).
+
+Using
+\[
+n'=-p^{-1}\bmod R,
+\]
+define
+\[
+m=(T\bmod R)n'\bmod R.
+\]
+By construction,
+\[
+T+mp
+\equiv 0\pmod R,
+\]
+so the quotient
+\[
+u=\frac{T+mp}{R}
+\]
+is an integer.  The result satisfies
+\[
+u\equiv TR^{-1}\pmod p.
+\]
+A final conditional subtraction returns the canonical representative.
+
+\paragraph{Algorithm 2. Montgomery reduction.}
+
+\[
+\begin{array}{ll}
+\textbf{Input:} & T,\quad 0\le T<pR,\\
+\textbf{Output:} & TR^{-1}\bmod p.
+\end{array}
+\]
+
+\[
+\begin{array}{rcl}
+m &\leftarrow& (T\bmod R)n'\bmod R,\\
+u &\leftarrow& (T+mp)/R,\\
+\textbf{if }u\ge p && u\leftarrow u-p,\\
+\textbf{return}&&u.
+\end{array}
+\]
+
+For a \(64\)-bit radix, the sum
+\[
+T+mp
+\]
+may require \(129\) bits.  The implementation therefore records the carry
+from the \(128\)-bit addition explicitly before extracting the high word.
+
+\subsection{Montgomery Multiplication}
+\label{sec:montgomery-mul}
+
+If \(\widetilde{a}\) and \(\widetilde{b}\) are already stored in Montgomery
+form, their product is computed as
+\[
+\operatorname{MontMul}
+(\widetilde{a},\widetilde{b})
+=
+\operatorname{REDC}
+(\widetilde{a}\widetilde{b}).
+\]
+
+\paragraph{Algorithm 3. Montgomery multiplication.}
+
+\[
+\begin{array}{ll}
+\textbf{Input:} & \widetilde{a}=aR\bmod p,\quad
+                  \widetilde{b}=bR\bmod p,\\
+\textbf{Output:} & abR\bmod p.
+\end{array}
+\]
+
+\[
+\begin{array}{rcl}
+T &\leftarrow& \widetilde{a}\widetilde{b},\\
+u &\leftarrow& \operatorname{REDC}(T),\\
+\textbf{return}&&u.
+\end{array}
+\]
+
+Conversion from canonical to Montgomery form is performed as
+\[
+\widetilde{a}
+=
+\operatorname{REDC}
+\left(
+a(R^2\bmod p)
+\right),
+\]
+while conversion back to the canonical representation is
+\[
+a
+=
+\operatorname{REDC}(\widetilde{a}).
+\]
+
+In the multiplication benchmark, operands are kept in their native
+representation throughout the timed region.  Thus the specialized
+Goldilocks implementation receives canonical residues, while the
+Montgomery implementation receives Montgomery residues.  Conversion is
+measured separately when it is relevant to an application and is not
+charged once per multiplication.
+
+\subsection{Kernel Fold Under the Two Arithmetic Models}
+\label{sec:fold-arithmetic}
+
+The Boolean-kernel reduction uses
+\[
+F_t(a,b)=t(a+b)+b.
+\]
+With canonical Goldilocks residues, the implementation can combine the
+final addition by \(b\) with the reduction of the \(128\)-bit product.
+This gives a specialized field operation rather than a literal sequence of
+one modular addition, one modular multiplication, and a second modular
+addition.
+
+In Montgomery form the same mathematical operation is
+\[
+\widetilde{F}_t(\widetilde{a},\widetilde{b})
+=
+\operatorname{MontMul}
+\left(
+\widetilde{t},
+\widetilde{a}+\widetilde{b}
+\right)
++
+\widetilde{b}.
+\]
+All operands remain in Montgomery form, so no conversion is needed between
+levels of the reduction tree.
+
+Table~\ref{tab:field-mul-structure} summarizes the two multiplication
+strategies before measurements.
+
+\begin{table}[ht]
+\centering
+\caption{Structure of the two Goldilocks multiplication strategies.}
+\label{tab:field-mul-structure}
+\begin{tabular}{lll}
+\toprule
+Method & Representation & Main reduction operation\\
+\midrule
+Goldilocks special &
+canonical residue &
+use \(2^{64}\equiv2^{32}-1\pmod p\)\\
+
+Montgomery &
+\(aR\bmod p\) &
+\((T+mp)/2^{64}\) with \(m=T_0n'\)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At this point there is no architectural conclusion to draw from the
+operation formulas alone.  The specialized reduction uses the algebraic
+form of the Goldilocks modulus; Montgomery reduction introduces additional
+word multiplications but has a regular reduction structure.  The generated
+instruction sequences and the complete evaluation times are therefore
+examined experimentally in the following sections.

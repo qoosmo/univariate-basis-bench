@@ -1,0 +1,273 @@
+\section{Benchmark Methodology}
+\label{sec:methodology}
+
+The purpose of the benchmark methodology is to isolate the effect of
+polynomial representation and implementation strategy while avoiding
+artificial disadvantages for competing representations. All reported
+timings are wall-clock measurements of actual Rust implementations.
+
+\subsection{Benchmark platform}
+
+The headline experiments were run on an Apple M1 system. The repository
+records the exact compiler, operating-system, processor, memory, Git
+revision, and thread-environment metadata associated with the benchmark in
+\texttt{paper/benchmark-environment.txt}.
+
+This machine-generated metadata file is committed with the paper so that
+the software environment associated with the measurements can be inspected
+independently of the prose description.
+
+The benchmark is compiled in Rust release mode. The release profile uses
+one code-generation unit, fat link-time optimization, and abort-on-panic
+semantics:
+\[
+\texttt{codegen-units}=1,
+\qquad
+\texttt{lto}=\texttt{fat},
+\qquad
+\texttt{panic}=\texttt{abort}.
+\]
+
+Where assembly inspection was required during optimization, compilation was
+performed for the native target CPU. The performance results reported in
+the benchmark tables are obtained from the release benchmark binaries
+described by the repository configuration.
+
+\subsection{Field}
+
+All compared polynomial representations use the same Goldilocks field
+implementation:
+\[
+\mathbb{F}_p,
+\qquad
+p=2^{64}-2^{32}+1.
+\]
+
+Using a common field backend is essential. Comparing one basis with a
+specialized field implementation against another basis with generic modular
+arithmetic would measure field engineering rather than the representation
+itself.
+
+The final Boolean-kernel implementation uses the optimized Goldilocks
+arithmetic described in \cref{sec:implementation}. Final cross-basis
+numbers must therefore be collected after the same arithmetic backend is
+active for every representation participating in the comparison.
+
+\subsection{Input sizes}
+
+The principal scaling experiment uses
+\[
+N\in
+\{
+2^{10},
+2^{12},
+2^{14},
+2^{16},
+2^{18},
+2^{20}
+\}.
+\]
+
+The headline comparison focuses on
+\[
+N=2^{20}=1{,}048{,}576.
+\]
+
+Power-of-two sizes are natural for the Boolean-kernel tree and also permit
+a genuine power-of-two roots-of-unity Lagrange domain in the Goldilocks
+field.
+
+\subsection{Input generation}
+
+For reproducibility, the monomial coefficient vector used by the main
+Criterion benchmark is deterministic. For
+\[
+0\le i<N,
+\]
+the implementation constructs
+\[
+a_i=17i+3
+\]
+as a canonical field element.
+
+The Boolean-kernel coefficient vector is obtained from the same polynomial
+using the monomial-to-kernel conversion implemented in the repository.
+That conversion is performed outside the timed evaluation loop.
+
+The evaluation point used by the main benchmark is
+\[
+x=19.
+\]
+
+These deterministic values are chosen for reproducibility rather than for
+special algebraic structure. Correctness tests separately exercise the
+representation identities and optimized field arithmetic.
+
+\subsection{Measured operation}
+
+The principal operation is:
+
+\begin{quote}
+Given a polynomial already stored in a specified representation and an
+arbitrary field point \(x\), compute \(P(x)\).
+\end{quote}
+
+The timed region therefore includes the work required to evaluate from that
+representation but excludes conversion from another representation.
+
+This distinction is intentional. The benchmark asks how expensive
+single-point evaluation is once a prover already owns the polynomial in the
+representation being measured. End-to-end systems may need conversion, and
+those costs must be accounted for separately when evaluating a complete
+prover pipeline.
+
+\subsection{Monomial baselines}
+
+Two monomial baselines are retained.
+
+The first is ordinary serial Horner evaluation. It is useful because it is
+the standard direct method and exposes the dependency chain inherent in
+that formulation.
+
+The second is a blocked parallel evaluator. If the block size is \(B\),
+write
+\[
+P(X)
+=
+\sum_j X^{jB}P_j(X),
+\]
+where each block polynomial \(P_j\) has degree less than \(B\).
+The values \(P_j(x)\) can be evaluated independently and combined
+afterward.
+
+The paper uses this blocked implementation as the fair parallel monomial
+baseline. We do not claim a kernel speedup by comparing a parallel kernel
+implementation only against an artificially serialized competitor.
+
+For the headline experiments the monomial block size is
+\[
+B=4096.
+\]
+
+\subsection{Boolean-kernel configuration}
+
+The final Boolean-kernel evaluator uses the implementation described in
+\cref{sec:implementation} with local subtree size
+\[
+B=4096.
+\]
+
+The block-size study showed no reproducible advantage large enough to
+justify replacing this setting with \(8192\), so \(4096\) is retained as
+the conservative default.
+
+Rayon provides the CPU worker pool. Unless a benchmark explicitly studies
+thread scaling, the default Rayon worker count for the machine is used.
+Thread-scaling experiments, when reported, must state
+\texttt{RAYON\_NUM\_THREADS} explicitly.
+
+\subsection{Criterion configuration}
+
+The principal Criterion benchmark uses:
+
+\begin{itemize}
+    \item sample size: \(50\);
+    \item warm-up time: \(5\) seconds;
+    \item measurement time: \(10\) seconds.
+\end{itemize}
+
+For close block-size comparisons, a longer controlled benchmark was used:
+
+\begin{itemize}
+    \item sample size: \(100\);
+    \item warm-up time: \(10\) seconds;
+    \item measurement time: \(20\) seconds.
+\end{itemize}
+
+We report the Criterion central estimate together with the measurement
+interval when discussing individual optimization steps. Outliers reported
+by Criterion are not silently removed from the benchmark configuration.
+
+Because sub-millisecond timings on a laptop-class processor can move with
+thermal state and background activity, differences at approximately the
+one-percent level are treated cautiously and are not promoted to
+algorithmic claims without controlled reruns.
+
+\subsection{Correctness checks}
+
+Performance measurements are accepted only after correctness tests pass.
+
+The repository checks, among other properties:
+
+\begin{enumerate}
+    \item direct Boolean-kernel evaluation agrees with the tree evaluator;
+    \item monomial-to-kernel conversion preserves the represented polynomial;
+    \item parallel kernel implementations agree with the serial reference;
+    \item optimized Goldilocks multiplication agrees with the reference
+    multiplication;
+    \item fused kernel folds agree with the unfused mathematical expression;
+    \item Lagrange evaluation reconstructs the same polynomial value as the
+    monomial representation on test instances.
+\end{enumerate}
+
+Optimization variants are therefore compared only after establishing that
+they compute the same field value.
+
+\subsection{Treatment of setup and precomputation}
+
+Setup is excluded from a timed loop only when it is reusable in the
+corresponding representation-level workload.
+
+For example, converting monomial coefficients into Boolean-kernel
+coefficients is not charged to the kernel single-point evaluator because
+the benchmark assumes that the polynomial is already represented in that
+basis. Likewise, construction of a reusable roots-of-unity domain should
+not be charged repeatedly to every Lagrange query if the same domain is
+reused by the prover.
+
+Conversely, temporary work intrinsic to one evaluation belongs in the
+timed path unless it is explicitly identified as reusable.
+
+All exclusions must therefore be interpreted as representation assumptions,
+not as claims that conversion or preprocessing is free.
+
+\subsection{Lagrange comparison policy}
+
+The repository contains both serial and parallel arbitrary-point Lagrange
+evaluation over a roots-of-unity domain using batch inversion.
+
+However, the numerical Lagrange results are not frozen at this stage of the
+paper. The Boolean-kernel arithmetic backend changed substantially during
+optimization, so an old Lagrange measurement collected under an earlier
+field implementation is not a valid final comparison.
+
+Before a Lagrange number is placed in the final results table, the Lagrange
+implementation will be rerun using the same final field backend, machine,
+compiler profile, and Criterion methodology.
+
+This prevents the paper from combining timings collected under materially
+different arithmetic implementations.
+
+\subsection{Fairness rules}
+
+The experimental comparison follows the following rules:
+
+\begin{enumerate}
+    \item the same field implementation is used by all bases in a final
+    comparison;
+    \item every method receives the same polynomial size \(N\);
+    \item all timings used in a direct ratio are collected on the same
+    benchmark machine;
+    \item serial and parallel algorithms are labeled separately;
+    \item legitimate parallelism is allowed for competing bases;
+    \item representation conversion is reported separately from evaluation;
+    \item reusable preprocessing is excluded only when the corresponding
+    workflow can genuinely reuse it;
+    \item all optimized implementations must agree with a correctness
+    reference before their timings are accepted;
+    \item results within the observed noise floor are not treated as
+    meaningful improvements.
+\end{enumerate}
+
+These rules are designed to make the benchmark a comparison of useful
+algorithms rather than of deliberately favorable implementation choices.

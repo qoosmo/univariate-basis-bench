@@ -1,0 +1,81 @@
+   Compiling univariate-basis-bench v0.1.0 (/Users/alimkhida/Documents/Projects/univariate-basis-bench)
+    Finished `bench` profile [optimized] target(s) in 27.55s
+     Running benches/mul_backend_compare.rs (target/release/deps/mul_backend_compare-9a6a830cf6359b83)
+Benchmarking mul_backend/goldilocks_special_mul
+Benchmarking mul_backend/goldilocks_special_mul: Warming up for 5.0000 s
+Benchmarking mul_backend/goldilocks_special_mul: Collecting 100 samples in estimated 15.000 s (7.8B iterations)
+Benchmarking mul_backend/goldilocks_special_mul: Analyzing
+mul_backend/goldilocks_special_mul
+                        time:   [1.9081 ns 1.9107 ns 1.9139 ns]
+Found 7 outliers among 100 measurements (7.00%)
+  5 (5.00%) high mild
+  2 (2.00%) high severe
+Benchmarking mul_backend/montgomery_mul
+Benchmarking mul_backend/montgomery_mul: Warming up for 5.0000 s
+Benchmarking mul_backend/montgomery_mul: Collecting 100 samples in estimated 15.000 s (7.7B iterations)
+Benchmarking mul_backend/montgomery_mul: Analyzing
+mul_backend/montgomery_mul
+                        time:   [1.8912 ns 1.9162 ns 1.9462 ns]
+Found 10 outliers among 100 measurements (10.00%)
+  2 (2.00%) high mild
+  8 (8.00%) high severe
+Benchmarking mul_backend/goldilocks_kernel_fold
+Benchmarking mul_backend/goldilocks_kernel_fold: Warming up for 5.0000 s
+Benchmarking mul_backend/goldilocks_kernel_fold: Collecting 100 samples in estimated 15.000 s (5.0B iterations)
+Benchmarking mul_backend/goldilocks_kernel_fold: Analyzing
+mul_backend/goldilocks_kernel_fold
+                        time:   [3.0168 ns 3.0292 ns 3.0462 ns]
+Found 17 outliers among 100 measurements (17.00%)
+  6 (6.00%) low mild
+  3 (3.00%) high mild
+  8 (8.00%) high severe
+Benchmarking mul_backend/montgomery_kernel_fold
+Benchmarking mul_backend/montgomery_kernel_fold: Warming up for 5.0000 s
+Benchmarking mul_backend/montgomery_kernel_fold: Collecting 100 samples in estimated 15.000 s (4.1B iterations)
+Benchmarking mul_backend/montgomery_kernel_fold: Analyzing
+mul_backend/montgomery_kernel_fold
+                        time:   [3.7187 ns 3.7952 ns 3.8957 ns]
+Found 18 outliers among 100 measurements (18.00%)
+  6 (6.00%) high mild
+  12 (12.00%) high severe
+
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576: Collecting 50 samples in estimated 12.495 s (13k iterations)
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576: Analyzing
+backend_full_eval_n1048576/kernel_goldilocks_special/1048576
+                        time:   [889.28 µs 918.66 µs 953.59 µs]
+                        thrpt:  [1.0996 Gelem/s 1.1414 Gelem/s 1.1791 Gelem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) high mild
+  2 (4.00%) high severe
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576: Collecting 50 samples in estimated 12.933 s (11k iterations)
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576: Analyzing
+backend_full_eval_n1048576/kernel_montgomery/1048576
+                        time:   [1.1303 ms 1.1911 ms 1.2585 ms]
+                        thrpt:  [833.21 Melem/s 880.35 Melem/s 927.67 Melem/s]
+Found 4 outliers among 50 measurements (8.00%)
+  1 (2.00%) high mild
+  3 (6.00%) high severe
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576: Collecting 50 samples in estimated 13.729 s (8925 iterations)
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576: Analyzing
+backend_full_eval_n1048576/monomial_goldilocks_special/1048576
+                        time:   [1.5250 ms 1.6431 ms 1.8385 ms]
+                        thrpt:  [570.35 Melem/s 638.18 Melem/s 687.59 Melem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) high mild
+  1 (2.00%) high severe
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576: Collecting 50 samples in estimated 12.110 s (7650 iterations)
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576: Analyzing
+backend_full_eval_n1048576/monomial_montgomery/1048576
+                        time:   [1.5301 ms 1.5636 ms 1.6055 ms]
+                        thrpt:  [653.13 Melem/s 670.62 Melem/s 685.28 Melem/s]
+Found 4 outliers among 50 measurements (8.00%)
+  4 (8.00%) high mild
+

@@ -1,0 +1,9 @@
+benchmark,lower_ns,estimate_ns,upper_ns
+mul_backend/goldilocks_special_mul,1.9081,1.9107,1.9139
+mul_backend/montgomery_mul,1.8912,1.9162,1.9462
+mul_backend/goldilocks_kernel_fold,3.0168,3.0292,3.0462
+mul_backend/montgomery_kernel_fold,3.7187,3.7952,3.8957
+backend_full_eval_n1048576/kernel_goldilocks_special/1048576,889280.0,918660.0,953590.0
+backend_full_eval_n1048576/kernel_montgomery/1048576,1130300.0,1191100.0,1258500.0
+backend_full_eval_n1048576/monomial_goldilocks_special/1048576,1525000.0,1643100.0,1838500.0
+backend_full_eval_n1048576/monomial_montgomery/1048576,1530100.0,1563600.0,1605500.0

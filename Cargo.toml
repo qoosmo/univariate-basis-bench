@@ -49,3 +49,7 @@ harness = false
 name = "final_bases"
 harness = false
 
+[[bench]]
+name = "mul_backend_compare"
+harness = false
+

@@ -1,0 +1,279 @@
+\section{Relevance to Proof Systems and Limitations}
+\label{sec:proof-systems}
+
+The experiments in this paper isolate arbitrary single-point evaluation of a
+univariate polynomial already stored in a chosen representation.  This
+section explains where such a primitive appears in existing proof-system
+architectures, which parts of the optimization can transfer directly, and
+which conclusions would require end-to-end integration experiments.
+
+\subsection{Where arbitrary-point evaluations appear}
+
+Transparent proof systems based on Reed--Solomon proximity testing commonly
+move between polynomial coefficients and evaluations on structured domains.
+They also evaluate committed polynomials at verifier-derived challenge
+points that need not lie on the original commitment domain.
+
+RISC Zero provides a concrete public example of this pattern.  Its STARK
+documentation describes conversion of trace columns to polynomial
+coefficients with an inverse NTT, Reed--Solomon evaluation on an expanded
+domain, DEEP-ALI checks at an out-of-domain point \(z\), and a subsequent
+FRI low-degree argument \cite{risc0starkbyhand,risc0sequence}.
+
+In the DEEP-ALI stage, the prover supplies evaluations of trace polynomials
+at points of the form
+\[
+P_i(\omega^n z),
+\]
+where \(z\) is a verifier challenge and the shifts depend on the constraint
+system \cite{risc0sequence}.  This is the class of operation for which an
+efficient arbitrary-point evaluator can potentially matter.
+
+The relevance is nevertheless conditional on representation.  Existing
+STARK implementations are typically organized around evaluation-domain
+vectors because FFT/NTT-based encoding, pointwise constraint operations,
+Merkle commitments, and FRI naturally consume such data.  Replacing only
+one evaluation routine without considering the representation of the
+surrounding pipeline may therefore introduce conversion costs that dominate
+the local gain.
+
+\subsection{Relation to FRI}
+
+FRI proves that a committed vector is close to evaluations of a low-degree
+polynomial.  Its commit phase recursively folds evaluations into smaller
+commitments, while the query phase opens a small number of positions from
+the committed layers \cite{risc0fri}.
+
+The Boolean-kernel fold studied in this paper,
+\[
+F_t(a,b)=t(a+b)+b,
+\]
+should not be identified with a standard FRI fold merely because both are
+binary reductions.  They act on different representations and satisfy
+different protocol roles.
+
+The present result instead motivates the following systems question:
+
+\begin{quote}
+Can a prover retain a Boolean-kernel representation across enough of the
+polynomial pipeline that the fast arbitrary-point evaluator is useful
+without paying an offsetting conversion cost before FRI or commitment?
+\end{quote}
+
+Answering this requires protocol-level design and benchmarking.  The current
+paper establishes the performance of the local representation primitive;
+it does not establish a new FRI protocol.
+
+\subsection{Transferable low-level optimizations}
+
+Some optimizations presented in \cref{sec:implementation} are not specific
+to the Boolean-kernel basis.
+
+The specialized Goldilocks reduction exploits only
+\[
+p=2^{64}-2^{32}+1.
+\]
+It can therefore benefit other Goldilocks workloads when the same arithmetic
+pattern occurs.
+
+This is relevant because Goldilocks has already been used specifically to
+obtain efficient CPU arithmetic in FRI-based proof systems.  Plonky2, for
+example, was designed around FRI and the Goldilocks field precisely because
+the modulus permits efficient \(64\)-bit arithmetic on modern processors
+\cite{plonky2intro}.
+
+Likewise, the experiments on allocation reuse, worker-local scratch space,
+bounds-check elimination, and task granularity are general implementation
+lessons for prover kernels.  Their exact gains are workload-dependent, but
+they do not rely on a change to the cryptographic protocol.
+
+By contrast, the speedup arising from the Boolean-kernel representation
+itself transfers only if the relevant polynomial is actually available in
+that representation.
+
+\subsection{Effect on an existing prover}
+
+Suppose an existing prover currently represents a polynomial by monomial
+coefficients or by evaluations on a roots-of-unity domain.
+
+There are three distinct integration cases.
+
+\paragraph{Case 1: local arithmetic replacement only.}
+If the prover retains its existing representation and proof format but
+adopts only the Goldilocks arithmetic optimizations, then the cryptographic
+protocol is unchanged.  Any speedup is limited to the affected arithmetic
+kernels.
+
+\paragraph{Case 2: internal representation change with identical proof
+interface.}
+If the prover internally stores some polynomials in Boolean-kernel form but
+converts back before commitment or proof serialization, then an external
+verifier need not change.  The benefit is positive only if
+\[
+T_{\mathrm{saved\ evaluations}}
+>
+T_{\mathrm{basis\ conversions}}
++
+T_{\mathrm{integration\ overhead}}.
+\]
+
+\paragraph{Case 3: protocol-visible representation change.}
+If commitments, openings, FRI layers, transcript messages, or verifier
+equations themselves change, then the proof format changes.  Existing
+verifiers cannot automatically accept the new proof format.
+
+This distinction is important when discussing systems that already have
+deployed verification infrastructure.
+
+\subsection{On-chain verification}
+
+A prover optimization does not by itself reduce on-chain verification gas.
+
+For example, RISC Zero publishes Solidity verifier interfaces for receipts
+and Ethereum integration contracts \cite{risc0ethverifier}.  These contracts
+consume a particular proof or receipt format.
+
+If a faster prover produces exactly the same proof bytes and verification
+relation, then:
+\[
+\boxed{
+\text{prover time may decrease while on-chain verification remains unchanged}.
+}
+\]
+
+In this case no smart-contract change is required, but gas usage is not
+expected to improve merely because the prover computed the proof faster.
+
+If instead the Boolean-kernel representation changes the proof object or
+verification equations, then deployed contracts would need a compatible new
+verifier implementation, a routing/versioning mechanism, or a migration
+path.  Existing RISC Zero Ethereum infrastructure, for example, uses
+verifier selectors and routing between verifier implementations, illustrating
+that verifier parameters and proof formats are versioned objects
+\cite{risc0router}.
+
+Accordingly, the present benchmark should be viewed primarily as a
+\emph{prover-side} result.
+
+\subsection{When the benchmark is likely to matter}
+
+The representation is most promising in workloads satisfying several of
+the following conditions:
+
+\begin{enumerate}
+    \item large polynomials are evaluated repeatedly at verifier-derived
+    off-domain points;
+    \item the polynomial can remain in Boolean-kernel representation for
+    more than one operation;
+    \item basis conversion can be amortized or eliminated;
+    \item the prover is CPU-bound in field arithmetic or memory movement
+    rather than dominated by hashing or external I/O;
+    \item the target field admits efficient realization of the fold
+    arithmetic.
+\end{enumerate}
+
+Conversely, the result is less likely to affect workloads in which the
+polynomial is used almost exclusively through evaluations on one fixed FFT
+domain or where a single arbitrary-point evaluation is surrounded by much
+larger hashing, commitment, or encoding costs.
+
+\subsection{Representation conversion}
+
+The monomial-to-kernel conversion described in
+\cref{sec:representations} is a Boolean Möbius transform and costs
+\[
+O(N\log N)
+\]
+field operations.
+
+This cost is not included in the single-point evaluation timing because
+the benchmark assumes the input is already represented in the basis being
+measured.
+
+For a one-off query, conversion can easily outweigh the evaluation gain.
+The basis is therefore most interesting when either:
+
+\begin{enumerate}
+    \item the witness or polynomial is generated directly in kernel
+    coefficients;
+    \item several subsequent operations consume the kernel representation;
+    \item conversion is fused with another prover stage;
+    \item or the representation replaces another transform already present
+    in the prover.
+\end{enumerate}
+
+An end-to-end evaluation must account for the full representation lifetime,
+not only the isolated query.
+
+\subsection{Limitations of the present experiments}
+
+The current study has several explicit limitations.
+
+\paragraph{Single processor family.}
+The headline measurements are from an Apple M1 system.  Cache sizes,
+instruction scheduling, multiplication latency, memory bandwidth, and the
+cost of Rayon scheduling differ on x86-64 servers and other ARM systems.
+
+\paragraph{Single base field.}
+The final measurements use Goldilocks.  The Boolean-kernel algebra is
+field-independent, but the constant factors of the implementation are not.
+A field such as Mersenne-31 may produce a different balance between
+arithmetic and memory costs.
+
+\paragraph{CPU implementation.}
+No GPU, FPGA, or wide-SIMD implementation is evaluated in this paper.
+
+\paragraph{Single-point evaluation focus.}
+The paper does not yet benchmark all operations needed by a proof system.
+In particular, full-domain encoding, low-degree extension, commitment,
+basis conversion, and FRI integration are separate workloads.
+
+\paragraph{No end-to-end prover measurement.}
+The measured
+\[
+1.337\times
+\]
+same-run speed advantage over the parallel monomial baseline applies to the
+single-point evaluator only.  It is not an end-to-end STARK or PCS speedup.
+
+\paragraph{Run-to-run variability.}
+The best kernel-only optimization run reached
+\[
+892.57\,\mu\mathrm{s},
+\]
+while the final same-run cross-basis sweep measured
+\[
+1.0560\,\mathrm{ms}.
+\]
+The paper therefore uses same-run measurements when constructing
+cross-basis ratios and reports the lower number only as a best observed
+implementation result.
+
+\paragraph{Lagrange implementation scope.}
+The roots-of-unity Lagrange benchmark uses the direct barycentric formula
+with batch inversion for an arbitrary point.  It is not intended to replace
+FFT/NTT evaluation when the requested points form a structured domain.
+
+\subsection{Next system-level experiments}
+
+The benchmark naturally suggests the following next experiments:
+
+\begin{enumerate}
+    \item measure monomial-to-kernel and kernel-to-monomial conversion
+    alongside single-point evaluation;
+    \item measure repeated queries to determine the query count at which
+    conversion amortizes;
+    \item integrate the evaluator into a DEEP-style off-domain evaluation
+    stage of an existing STARK implementation;
+    \item benchmark a kernel-native route to FRI commitment and folding;
+    \item repeat the study on x86-64, Mersenne-31, and additional processor
+    architectures;
+    \item measure the fraction of total prover time attributable to the
+    operation before making an end-to-end performance claim.
+\end{enumerate}
+
+The principal open engineering question is therefore no longer whether the
+Boolean-kernel representation supports a fast arbitrary-point evaluation.
+The experiments establish that it does.  The remaining question is whether
+a complete proof-system pipeline can preserve the representation long enough
+for this local advantage to survive at system scale.

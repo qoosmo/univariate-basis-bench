@@ -165,9 +165,9 @@ storage.  The first tree level is written directly from the immutable input
 slice into a half-size scratch buffer, after which the remaining local
 levels are performed in place.
 
-The purpose of this implementation strategy is not to alter the arithmetic
-graph derived in Section~\ref{sec:kernel-fold}.  It only changes the
-scheduling and memory traffic of that graph.
+This implementation preserves the arithmetic graph derived in
+Section~\ref{sec:kernel-fold}; it changes only the scheduling and memory
+traffic of that graph.
 
 \subsection{Processor and Compiler}
 \label{sec:processor-compiler}

@@ -1,0 +1,41 @@
+\section{Conclusions}
+\label{sec:conclusions}
+
+This article compared single-point evaluation of univariate polynomials in
+three representations on an Apple M1 processor.  The Boolean-kernel basis
+leads to a balanced reduction tree in which all folds at one level are
+independent.  In the common cross-representation benchmark at
+\(N=2^{20}\), this evaluator required \(1.0560\) ms, compared with
+\(1.4116\) ms for the blocked parallel monomial implementation.  The
+difference corresponds to \(25.2\%\) less wall time for the isolated
+evaluation operation.
+
+The arithmetic-backend experiment helps identify the source of this
+difference.  Specialized Goldilocks multiplication and Montgomery
+multiplication have almost identical isolated multiplication times.  The
+fold operation does not: the specialized Goldilocks fold is faster than
+its Montgomery counterpart, and the same ordering is observed in all five
+independent runs of the complete kernel evaluator.  No similarly stable
+ordering is observed for the blocked monomial evaluator.  The performance
+difference is therefore associated with the combination of the
+Boolean-kernel reduction structure and the arithmetic used inside the
+fold, rather than with a universal advantage of one scalar multiplication
+routine.
+
+These measurements concern a single processor and an isolated polynomial
+operation.  They do not establish an end-to-end speedup for a proof system.
+Such a speedup depends on the representation used by the surrounding
+protocol, the frequency of basis conversion, and the fraction of prover
+time spent in the evaluated primitive.  A monomial-to-kernel conversion
+requires \(O(N\log N)\) field additions, so repeated conversion can erase
+the benefit measured here.
+
+Further work should therefore address two questions.  The first is
+architectural: the same evaluators should be measured on additional
+out-of-order CPUs and, where appropriate, on SIMD and accelerator
+implementations.  The second is algorithmic: the Boolean-kernel
+representation should be integrated into a complete polynomial-commitment
+or proof-system pipeline in which conversion, commitment, and opening costs
+are measured together.  These experiments would determine whether the
+single-point advantage observed here persists beyond the isolated
+evaluation kernel.

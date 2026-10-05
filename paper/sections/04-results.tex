@@ -40,8 +40,8 @@ Montgomery / special, monomial &
 \end{tabular}
 \end{table}
 
-The first result is that the ranking of field multipliers and the ranking
-of complete evaluators are not the same question.  In the isolated
+The ranking of isolated field multipliers does not determine the ranking
+of complete evaluators.  In the isolated
 multiplication benchmark, specialized Goldilocks multiplication and
 Montgomery multiplication have nearly identical central estimates:
 \(1.9107\) ns and \(1.9162\) ns, respectively.  Their measurement intervals
@@ -169,9 +169,8 @@ directly on the evaluation domain.
 
 Figure~\ref{fig:scaling} reports the complete cross-basis sweep from
 \(N=2^{10}\) to \(N=2^{20}\).  The vertical axis is logarithmic in time.
-The figure plays the same role as the global result plots in the reference
-performance study: it shows the complete set of principal algorithms before
-the individual measurements are interpreted.
+The figure shows the complete set of principal algorithms before the
+individual measurements are interpreted.
 
 \begin{figure}[ht]
 \centering
@@ -302,13 +301,12 @@ accumulation.
 \subsection{Interpretation}
 \label{sec:results-interpretation}
 
-The measurements support two separate conclusions.  First, the
-Boolean-kernel representation gives a lower single-point evaluation time
-than the fair parallel monomial baseline in the common \(N=2^{20}\)
-benchmark.  Second, this advantage cannot be explained by a generally
-faster scalar field multiplication: isolated Goldilocks and Montgomery
+At \(N=2^{20}\), the Boolean-kernel representation gives a lower
+single-point evaluation time than the parallel monomial baseline in the
+common benchmark.  This difference is not explained by a generally faster
+scalar field multiplication: isolated Goldilocks and Montgomery
 multiplication are nearly tied, whereas the specialized Boolean-kernel fold
-and the complete specialized kernel evaluator show a clear advantage.
+and the complete specialized kernel evaluator show a clear separation.
 
 The result is therefore an interaction between representation and
 implementation.  The Boolean-kernel basis exposes a balanced reduction

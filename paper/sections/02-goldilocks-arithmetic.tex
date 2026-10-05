@@ -16,9 +16,9 @@ modulus.  The second uses Montgomery representation with radix
 \[
 R=2^{64}.
 \]
-The purpose of considering both is not to assume in advance that one is
-preferable, but to determine experimentally how the modular multiplication
-algorithm changes the cost of the polynomial evaluators.
+Both strategies are retained in the experiments so that the effect of the
+modular multiplication algorithm can be measured independently of the
+polynomial representation.
 
 \subsection{Reduction Specialized to the Goldilocks Modulus}
 \label{sec:goldilocks-special}

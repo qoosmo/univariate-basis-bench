@@ -20,20 +20,25 @@
 
 \begin{abstract}
 Polynomial evaluation is a basic operation in computer algebra and in
-several polynomial-based proof systems.  Its implementation is usually
-described in terms of arithmetic complexity, although on current processors
-the dependency structure of the computation, memory traffic, and the cost
-of modular multiplication are equally relevant.  In this article, we
-compare single-point evaluation from three univariate representations:
-monomial coefficients, values on a roots-of-unity Lagrange domain, and a
-Boolean-kernel basis.  The latter admits a binary reduction in which pairs
-of coefficients are combined independently at each level.  We study this
-reduction over the Goldilocks field on an Apple M1 processor and consider
-two realizations of field multiplication: reduction specialized to the
-Goldilocks modulus and Montgomery multiplication.  The objective is to
-separate the effect of the polynomial representation from that of the
-underlying field arithmetic and to determine experimentally which
-combination is preferable for arbitrary single-point evaluation.
+several polynomial-based proof systems.  Its cost is commonly described by
+the number of arithmetic operations, although on current processors the
+dependency structure of the computation, memory traffic, and modular
+reduction also affect performance.  In this article, we compare arbitrary
+single-point evaluation from three univariate representations: monomial
+coefficients, values on a roots-of-unity Lagrange domain, and a
+Boolean-kernel basis.  The Boolean-kernel representation admits a binary
+reduction in which all folds at a fixed level are independent.  We study
+this reduction over the Goldilocks field on an Apple M1 processor and
+compare reduction specialized to the Goldilocks modulus with Montgomery
+multiplication.  At \(N=2^{20}\), the optimized Boolean-kernel evaluator
+takes \(1.0560\) ms, compared with \(1.4116\) ms for a blocked parallel
+monomial implementation in the same benchmark run, a reduction of
+\(25.2\%\) in wall time.  Isolated Goldilocks and Montgomery
+multiplications are nearly indistinguishable, while the complete kernel
+evaluator is consistently faster with the specialized arithmetic backend.
+The measurements therefore indicate that the observed gain results from
+the interaction between the polynomial representation, its dependency
+graph, and the field-arithmetic implementation.
 \end{abstract}
 
 Polynomial evaluation is among the elementary operations on which more
@@ -98,6 +103,7 @@ dependency graphs of the algorithms.
 \input{sections/02-goldilocks-arithmetic}
 \input{sections/03-processor-methods}
 \input{sections/04-results}
+\input{sections/05-conclusions}
 
 \bibliographystyle{plain}
 \bibliography{references}

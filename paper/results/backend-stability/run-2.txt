@@ -1,0 +1,54 @@
+    Finished `bench` profile [optimized] target(s) in 0.14s
+     Running benches/mul_backend_compare.rs (target/release/deps/mul_backend_compare-9a6a830cf6359b83)
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576: Collecting 50 samples in estimated 12.220 s (11k iterations)
+Benchmarking backend_full_eval_n1048576/kernel_goldilocks_special/1048576: Analyzing
+backend_full_eval_n1048576/kernel_goldilocks_special/1048576
+                        time:   [948.02 µs 989.03 µs 1.0538 ms]
+                        thrpt:  [995.04 Melem/s 1.0602 Gelem/s 1.1061 Gelem/s]
+                 change:
+                        time:   [-2.8221% +2.8696% +8.5063%] (p = 0.35 > 0.05)
+                        thrpt:  [-7.8394% -2.7895% +2.9041%]
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high severe
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576: Collecting 50 samples in estimated 12.476 s (10k iterations)
+Benchmarking backend_full_eval_n1048576/kernel_montgomery/1048576: Analyzing
+backend_full_eval_n1048576/kernel_montgomery/1048576
+                        time:   [1.2018 ms 1.2277 ms 1.2569 ms]
+                        thrpt:  [834.27 Melem/s 854.11 Melem/s 872.52 Melem/s]
+                 change:
+                        time:   [-0.3780% +3.0276% +6.3167%] (p = 0.09 > 0.05)
+                        thrpt:  [-5.9414% -2.9387% +0.3795%]
+                        No change in performance detected.
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576: Collecting 50 samples in estimated 12.696 s (7650 iterations)
+Benchmarking backend_full_eval_n1048576/monomial_goldilocks_special/1048576: Analyzing
+backend_full_eval_n1048576/monomial_goldilocks_special/1048576
+                        time:   [1.5397 ms 1.5594 ms 1.5821 ms]
+                        thrpt:  [662.78 Melem/s 672.43 Melem/s 681.00 Melem/s]
+                 change:
+                        time:   [+6.8865% +8.7882% +10.835%] (p = 0.00 < 0.05)
+                        thrpt:  [-9.7756% -8.0783% -6.4428%]
+                        Performance has regressed.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576: Warming up for 5.0000 s
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576: Collecting 50 samples in estimated 13.712 s (7650 iterations)
+Benchmarking backend_full_eval_n1048576/monomial_montgomery/1048576: Analyzing
+backend_full_eval_n1048576/monomial_montgomery/1048576
+                        time:   [1.6298 ms 1.6542 ms 1.6793 ms]
+                        thrpt:  [624.40 Melem/s 633.90 Melem/s 643.36 Melem/s]
+                 change:
+                        time:   [+7.9815% +10.649% +13.139%] (p = 0.00 < 0.05)
+                        thrpt:  [-11.613% -9.6244% -7.3916%]
+                        Performance has regressed.
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+

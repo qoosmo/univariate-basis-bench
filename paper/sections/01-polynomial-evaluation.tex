@@ -1,0 +1,75 @@
+\section{Polynomial Evaluation}
+\label{sec:poly-eval}
+
+Let
+\[
+P(X)=a_0+a_1X+\cdots+a_nX^n
+\]
+be a univariate polynomial over a finite field \(\mathbb{F}\).  Several
+representations and evaluation algorithms can be used for the computation
+of \(P(x)\).  We retain three cases in this study.  The first is the
+monomial representation, evaluated by Horner's rule and by a blocked
+parallel variant.  The second stores the values of the polynomial on a
+roots-of-unity domain and evaluates an off-domain point using the
+corresponding Lagrange formula.  The third is the Boolean-kernel
+representation introduced above.
+
+The methods do not expose the same arithmetic structure.  Horner's rule
+uses a small number of operations but forms one long recurrence.  The
+Boolean-kernel method uses a binary tree whose nodes at a fixed level are
+independent.  Evaluation from a Lagrange domain has linear arithmetic work
+for a single arbitrary point, but also requires inversion of all
+denominators; in the implementation considered here this is carried out by
+one batch inversion.
+
+Table~\ref{tab:arith-structure} summarizes the arithmetic structure before
+processor-specific optimizations.  For the Boolean-kernel row,
+\(N=2^m\) denotes the number of coefficients.  The Lagrange row describes
+the batch-inversion organization rather than a single exact multiplication
+count, since that count depends on which domain constants and inverses are
+precomputed.
+
+\begin{table}[ht]
+\centering
+\caption{Arithmetic structure of the evaluation methods considered in this
+study.  The counts describe field operations before low-level reduction
+optimizations.}
+\label{tab:arith-structure}
+\begin{tabular}{llll}
+\toprule
+Representation & Evaluation method & Arithmetic work & Dependency structure\\
+\midrule
+Monomial &
+Horner &
+\(n\) mul., \(n\) add. &
+single chain\\
+
+Monomial &
+blocked Horner &
+\(O(n)\) &
+independent blocks\\
+
+Roots-of-unity values &
+Lagrange / batch inversion &
+\(O(N)\) mul., one batch inv. &
+parallel sums, serial batch scan\\
+
+Boolean-kernel &
+binary fold &
+\(N-1\) mul., \(2(N-1)\) add.,
+\(m-1\) sqr. &
+binary reduction tree\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The usual operation count is therefore only a first indication of cost.
+The blocked monomial and Boolean-kernel methods deliberately expose more
+independent work than classical Horner evaluation.  Whether this
+parallelism compensates for the additional additions, exponent generation,
+or reduction overhead is an architectural question and is measured later.
+
+In the remainder of this section we describe each representation and its
+evaluation rule.  The Boolean-kernel method is treated last, after the two
+reference representations, so that its additional algebraic structure can
+be compared directly with the conventional cases.

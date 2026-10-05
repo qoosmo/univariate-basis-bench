@@ -11,15 +11,90 @@
 \providecommand{\cref}[1]{\ref{#1}}
 \providecommand{\Cref}[1]{\ref{#1}}
 
-\title{Fast Single-Point Evaluation of Univariate Polynomials in the Boolean-Kernel Basis}
+\title{Polynomial Evaluation in the Boolean-Kernel Basis on Modern Processors}
 \author{Ali Mkhida\\Algorizk Labs}
 \date{}
 
 \begin{document}
 \maketitle
 
-% The manuscript is intentionally rebuilt section by section.
-% Do not restore archived text here without review.
+\begin{abstract}
+Polynomial evaluation is a basic operation in computer algebra and in
+several polynomial-based proof systems.  Its implementation is usually
+described in terms of arithmetic complexity, although on current processors
+the dependency structure of the computation, memory traffic, and the cost
+of modular multiplication are equally relevant.  In this article, we
+compare single-point evaluation from three univariate representations:
+monomial coefficients, values on a roots-of-unity Lagrange domain, and a
+Boolean-kernel basis.  The latter admits a binary reduction in which pairs
+of coefficients are combined independently at each level.  We study this
+reduction over the Goldilocks field on an Apple M1 processor and consider
+two realizations of field multiplication: reduction specialized to the
+Goldilocks modulus and Montgomery multiplication.  The objective is to
+separate the effect of the polynomial representation from that of the
+underlying field arithmetic and to determine experimentally which
+combination is preferable for arbitrary single-point evaluation.
+\end{abstract}
+
+Polynomial evaluation is among the elementary operations on which more
+complex numerical and algebraic software is built.  The classical
+algorithms are well understood: Horner's rule minimizes the number of
+general multiplications for a dense polynomial in monomial form, while
+divide-and-conquer schemes expose more independent operations at the price
+of additional work.  In applications that already store a polynomial by
+its values on a structured domain, interpolation formulas provide another
+route to an arbitrary evaluation point.
+
+The operation is also present in polynomial commitment schemes and
+transparent proof systems.  In such systems, a polynomial may be stored in
+coefficient form, as evaluations on a domain, or in a representation chosen
+to simplify a later protocol stage.  Consequently, the cost of evaluating
+at a verifier-derived point depends not only on the degree but also on the
+representation in which the polynomial is available.
+
+Arithmetic counts alone do not determine execution time on a modern
+processor.  A short dependency chain can permit several independent field
+operations to proceed concurrently, whereas a recurrence with fewer
+operations may serialize the execution.  The cost of the field
+multiplication is another important part of the comparison.  For the
+Goldilocks prime
+\[
+p=2^{64}-2^{32}+1,
+\]
+one may either exploit the special form of the modulus or keep field
+elements in Montgomery representation.  These two choices have different
+instruction sequences and need not lead to the same ranking of polynomial
+evaluation methods.
+
+In this work we consider a third representation, indexed by Boolean
+vectors,
+\[
+K_y(X)=\prod_{i=0}^{m-1}\left(X^{2^i}+y_i\right),
+\qquad
+y\in\{0,1\}^m .
+\]
+For \(N=2^m\), a polynomial of degree less than \(N\) is written
+\[
+P(X)=\sum_{y\in\{0,1\}^m}c_yK_y(X).
+\]
+At a fixed point \(x\), two coefficients whose indices differ only in bit
+\(i\) can be replaced by one coefficient using
+\[
+(a,b)\longmapsto x^{2^i}(a+b)+b.
+\]
+The resulting computation is a complete binary reduction tree.  It has
+linear work, but a dependency structure substantially different from
+Horner's rule.
+
+The purpose of this study is to compare these evaluation structures on the
+same processor and with the same finite-field implementation.  We first
+describe the polynomial representations and the arithmetic work associated
+with each evaluation method.  We then examine the Goldilocks and Montgomery
+multiplication algorithms, describe the processor and measurement method,
+and finally present the benchmark results and their relation to the
+dependency graphs of the algorithms.
+
+\input{sections/01-polynomial-evaluation}
 
 \bibliographystyle{plain}
 \bibliography{references}

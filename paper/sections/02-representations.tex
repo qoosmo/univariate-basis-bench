@@ -1,0 +1,313 @@
+\section{Polynomial Representations}
+\label{sec:representations}
+
+This section fixes the notation used throughout the paper and defines the
+three univariate representations compared experimentally.
+
+\subsection{Ambient polynomial space}
+
+Let \(\mathbb{F}\) be a field and let
+\[
+N=2^m
+\]
+for an integer \(m\ge 1\).  We work in the \(N\)-dimensional
+\(\mathbb{F}\)-vector space
+\[
+\mathbb{F}[X]_{<N}
+=
+\{P\in\mathbb{F}[X] : \deg P < N\}.
+\]
+Every representation considered below encodes exactly one polynomial in
+this space using \(N\) field elements.
+
+For an integer
+\[
+e=\sum_{i=0}^{m-1} e_i 2^i,
+\qquad e_i\in\{0,1\},
+\]
+we write
+\[
+\operatorname{bits}(e)=(e_0,\ldots,e_{m-1}).
+\]
+For Boolean vectors \(u,v\in\{0,1\}^m\), we write
+\[
+u\subseteq v
+\]
+when \(u_i\le v_i\) for every \(i\).  Equivalently, the support of \(u\)
+is a subset of the support of \(v\).
+
+\subsection{Monomial representation}
+
+The standard monomial basis of \(\mathbb{F}[X]_{<N}\) is
+\[
+1,X,X^2,\ldots,X^{N-1}.
+\]
+A polynomial is represented by coefficients
+\[
+a_0,\ldots,a_{N-1}\in\mathbb{F}
+\]
+such that
+\[
+P(X)=\sum_{e=0}^{N-1}a_eX^e.
+\]
+
+For a point \(x\in\mathbb{F}\), Horner evaluation computes
+\[
+P(x)
+=
+a_0+x\bigl(a_1+x(a_2+\cdots+x a_{N-1})\bigr),
+\]
+or equivalently by processing the coefficients in reverse order with the
+recurrence
+\[
+r_{j+1}=xr_j+a_{N-1-j},
+\qquad r_0=0.
+\]
+The serial dependency chain makes ordinary Horner evaluation inherently
+sequential, although a long coefficient vector can be partitioned into
+blocks and the blocks evaluated in parallel.  Our experimental comparison
+therefore includes both serial Horner evaluation and a blocked parallel
+monomial baseline.
+
+\subsection{Roots-of-unity Lagrange representation}
+
+Assume that \(\mathbb{F}\) contains a primitive \(N\)-th root of unity
+\(\omega\).  Define the multiplicative evaluation domain
+\[
+H
+=
+\{1,\omega,\omega^2,\ldots,\omega^{N-1}\}.
+\]
+A polynomial \(P\in\mathbb{F}[X]_{<N}\) can be represented by its values
+\[
+v_j=P(\omega^j),
+\qquad 0\le j<N.
+\]
+
+The associated Lagrange basis consists of polynomials
+\[
+L_j(X)
+=
+\prod_{\substack{0\le k<N\\k\ne j}}
+\frac{X-\omega^k}{\omega^j-\omega^k},
+\]
+which satisfy
+\[
+L_j(\omega^k)=
+\begin{cases}
+1,&j=k,\\
+0,&j\ne k.
+\end{cases}
+\]
+Hence
+\[
+P(X)=\sum_{j=0}^{N-1}v_jL_j(X).
+\]
+
+For a roots-of-unity domain one may also use
+\[
+L_j(X)
+=
+\frac{X^N-1}{N(X-\omega^j)}\,\omega^j,
+\]
+provided \(X\ne\omega^j\).  This identity is useful for arbitrary-point
+evaluation because all denominators \(x-\omega^j\) can be inverted with a
+single batch inversion.
+
+This representation is especially natural when a proof system already
+stores polynomial values on an FFT/NTT domain.  Our benchmark measures
+arbitrary-point evaluation from this representation rather than the
+separate cost of constructing the representation.
+
+\subsection{Boolean-kernel representation}
+
+For each Boolean vector
+\[
+y=(y_0,\ldots,y_{m-1})\in\{0,1\}^m,
+\]
+define
+\[
+K_y(X)
+=
+\prod_{i=0}^{m-1}
+\left(X^{2^i}+y_i\right).
+\]
+There are exactly \(2^m=N\) such polynomials.
+
+A Boolean-kernel coefficient vector is a family
+\[
+(c_y)_{y\in\{0,1\}^m}
+\]
+representing the polynomial
+\[
+P(X)
+=
+\sum_{y\in\{0,1\}^m}
+c_yK_y(X).
+\]
+
+Although every \(K_y\) has degree at most \(N-1\), and in fact every
+\(K_y\) contains the top monomial \(X^{N-1}\), the family is nevertheless
+a basis.  Its coefficient matrix is a Boolean zeta matrix after a reversal
+of the monomial index.
+
+\begin{lemma}[Monomial coefficients of \(K_y\)]
+\label{lem:kernel-monomial-coeff}
+Let
+\[
+e=\sum_{i=0}^{m-1}e_i2^i
+\]
+with \(e_i\in\{0,1\}\), and define the Boolean complement vector
+\[
+\bar e=(1-e_0,\ldots,1-e_{m-1}).
+\]
+Then
+\[
+[X^e]K_y(X)
+=
+\begin{cases}
+1,&\bar e\subseteq y,\\
+0,&\text{otherwise}.
+\end{cases}
+\]
+\end{lemma}
+
+\begin{proof}
+Expanding
+\[
+K_y(X)=\prod_{i=0}^{m-1}(X^{2^i}+y_i),
+\]
+the monomial \(X^e\) can arise in exactly one way because the powers
+\(2^0,\ldots,2^{m-1}\) give the unique binary expansion of \(e\).
+
+For each index \(i\) with \(e_i=1\), the term \(X^{2^i}\) must be selected.
+For each index \(i\) with \(e_i=0\), the constant term \(y_i\) must be
+selected.  Therefore
+\[
+[X^e]K_y(X)
+=
+\prod_{i:e_i=0}y_i.
+\]
+Since every \(y_i\) is either \(0\) or \(1\), this product equals \(1\)
+exactly when \(y_i=1\) for every \(i\) such that \(e_i=0\).  This condition
+is precisely
+\[
+\bar e\subseteq y.
+\]
+\end{proof}
+
+\begin{theorem}[Boolean-kernel basis]
+\label{thm:kernel-basis}
+The family
+\[
+\mathcal{K}_m
+=
+\{K_y(X):y\in\{0,1\}^m\}
+\]
+is a basis of \(\mathbb{F}[X]_{<N}\).
+\end{theorem}
+
+\begin{proof}
+There are exactly \(N\) polynomials in \(\mathcal{K}_m\), so it is enough
+to prove linear independence.
+
+Index the monomial rows not directly by \(e\), but by the Boolean vector
+\[
+z=\bar e.
+\]
+By \cref{lem:kernel-monomial-coeff}, the coefficient matrix \(A\) of the
+family \(\mathcal{K}_m\) in the monomial basis is
+\[
+A_{z,y}
+=
+\mathbf{1}[z\subseteq y].
+\]
+This is the zeta matrix of the Boolean subset lattice.
+
+Order the Boolean vectors by nondecreasing Hamming weight, breaking ties
+arbitrarily.  Whenever \(z\subseteq y\), either \(z=y\) or
+\[
+|z|<|y|.
+\]
+Consequently, under this ordering, \(A\) is upper triangular with diagonal
+entries
+\[
+A_{y,y}=1.
+\]
+Hence
+\[
+\det A=1\ne0
+\]
+in every field, so \(A\) is invertible.  Therefore the polynomials
+\(K_y\) are linearly independent and form a basis of
+\(\mathbb{F}[X]_{<N}\).
+\end{proof}
+
+\subsection{Relation to the Boolean zeta transform}
+
+The proof above also gives an explicit relationship between monomial and
+Boolean-kernel coefficients.
+
+Let
+\[
+P(X)=\sum_{e=0}^{N-1}a_eX^e
+=
+\sum_{y\in\{0,1\}^m}c_yK_y(X).
+\]
+For the exponent whose Boolean complement is \(z\), that is
+\[
+e=(N-1)\mathbin{\mathrm{xor}} z,
+\]
+\cref{lem:kernel-monomial-coeff} gives
+\[
+a_e
+=
+\sum_{y:\,z\subseteq y}c_y.
+\]
+Thus, after complementing the monomial index, the map from kernel
+coefficients to monomial coefficients is the Boolean superset-zeta
+transform.
+
+The inverse map is Boolean Möbius inversion:
+\[
+c_y
+=
+\sum_{z:\,y\subseteq z}
+(-1)^{|z|-|y|}
+a_{(N-1)\mathbin{\mathrm{xor}} z}.
+\]
+Algorithmically, both transforms can be implemented in
+\[
+O(N\log N)
+\]
+field operations by the usual butterfly-style zeta/Möbius transform.
+
+This conversion cost is deliberately separated from the single-point
+evaluation benchmarks.  In each benchmark the polynomial is assumed to
+already be available in the representation being measured.  Conversion
+costs become important when considering an end-to-end proof-system
+pipeline and are discussed separately later in the paper.
+
+\subsection{A small example}
+
+Take \(m=2\), so \(N=4\).  The four kernel polynomials are
+\[
+\begin{aligned}
+K_{00}(X)&=X(X^2)=X^3,\\
+K_{01}(X)&=(X+1)X^2=X^3+X^2,\\
+K_{10}(X)&=X(X^2+1)=X^3+X,\\
+K_{11}(X)&=(X+1)(X^2+1)=X^3+X^2+X+1.
+\end{aligned}
+\]
+Here the first Boolean coordinate corresponds to the factor
+\(X^{2^0}+y_0\), and the second to \(X^{2^1}+y_1\).
+
+The coefficient pattern is triangular after complementing the monomial
+index.  In particular, the constant monomial occurs only in \(K_{11}\),
+the monomial \(X\) occurs in \(K_{10}\) and \(K_{11}\), the monomial
+\(X^2\) occurs in \(K_{01}\) and \(K_{11}\), and \(X^3\) occurs in all
+four kernel polynomials.
+
+This subset structure is the algebraic reason that the representation is
+invertible.  In the next section we show that the same product structure
+also produces a particularly simple binary evaluation algorithm.

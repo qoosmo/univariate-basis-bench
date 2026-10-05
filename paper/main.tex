@@ -6,6 +6,8 @@
 \usepackage{microtype}
 \usepackage{hyperref}
 \IfFileExists{cleveref.sty}{\usepackage[nameinlink,noabbrev]{cleveref}}{}
+\providecommand{\cref}[1]{\ref{#1}}
+\providecommand{\Cref}[1]{\ref{#1}}
 
 \title{Fast Single-Point Evaluation of Univariate Polynomials\\
 in the Boolean-Kernel Basis}
@@ -51,6 +53,7 @@ gain to complete proof systems.
 \end{abstract}
 
 \input{sections/01-introduction}
+\input{sections/02-representations}
 
 \bibliographystyle{alpha}
 \bibliography{references}

@@ -1,0 +1,320 @@
+
+\section{Results}
+\label{sec:results}
+
+Table~\ref{tab:results-summary} gives a compact view of the principal
+measurements.  Two experiments are reported separately.  The first is the
+cross-representation sweep, in which all polynomial representations are
+measured in one benchmark campaign with the same Goldilocks arithmetic
+backend.  The second is the backend experiment, in which specialized
+Goldilocks arithmetic and Montgomery arithmetic are compared for the same
+evaluation algorithm.  Absolute timings are not compared across these two
+campaigns.
+
+\begin{table}[ht]
+\centering
+\caption{Summary of the main measurements at \(N=2^{20}\).  Cross-basis
+times come from one common benchmark sweep.  Backend ratios are the median
+of five independent same-run comparisons.}
+\label{tab:results-summary}
+\begin{tabular}{lll}
+\toprule
+Experiment & Quantity & Result\\
+\midrule
+Cross-basis &
+Boolean-kernel &
+1.0560 ms\\
+Cross-basis &
+parallel monomial &
+1.4116 ms\\
+Cross-basis &
+kernel / parallel monomial &
+1.337\(\times\)\\
+Backend &
+Montgomery / special, kernel &
+1.2777\(\times\)\\
+Backend &
+Montgomery / special, monomial &
+1.0591\(\times\)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first result is that the ranking of field multipliers and the ranking
+of complete evaluators are not the same question.  In the isolated
+multiplication benchmark, specialized Goldilocks multiplication and
+Montgomery multiplication have nearly identical central estimates:
+\(1.9107\) ns and \(1.9162\) ns, respectively.  Their measurement intervals
+overlap.  No meaningful advantage can therefore be assigned to either
+method from the isolated multiplication benchmark alone.
+
+The kernel fold behaves differently.  The specialized operation
+\[
+t(a+b)+b
+\]
+takes \(3.0292\) ns in the microbenchmark, compared with \(3.7952\) ns for
+the Montgomery implementation.  The ratio is \(1.2529\times\).  The
+difference appears only after the multiplication has been embedded in the
+compound fold operation, where the form of the Goldilocks modulus can be
+used together with the surrounding additions.
+
+\subsection{Field Backend and Complete Evaluators}
+\label{sec:backend-results}
+
+To test whether the microbenchmark difference survives in the complete
+evaluator, the four full \(N=2^{20}\) configurations were repeated in
+five independent Criterion invocations.  Table~\ref{tab:backend-stability}
+reports the central estimate from each invocation.
+
+\begin{table}[ht]
+\centering
+\caption{Repeated full-evaluator measurements at \(N=2^{20}\), in
+microseconds.  M/S denotes Montgomery time divided by specialized
+Goldilocks time within the same invocation.}
+\label{tab:backend-stability}
+\begin{tabular}{rrrrrr}
+\toprule
+Run & \(K_S\) & \(K_M\) & \(M_S\) & \(M_M\) & Kernel M/S\\
+\midrule
+1 & 883.61 & 1172.40 & 1453.50 & 1531.00 & 1.327\\
+2 & 989.03 & 1227.70 & 1559.40 & 1654.20 & 1.241\\
+3 & 1080.90 & 1159.90 & 1537.00 & 1901.10 & 1.073\\
+4 & 1036.00 & 1323.70 & 2208.30 & 1666.00 & 1.278\\
+5 & 952.15 & 1277.60 & 1607.80 & 1702.80 & 1.342\\
+\midrule
+Median &
+989.03 &
+1227.70 &
+1559.40 &
+1666.00 &
+1.278\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The kernel result is stable in sign across all five invocations.  The
+Montgomery implementation is slower in every run, with a median same-run
+ratio of
+\[
+1.2777\times.
+\]
+The absolute specialized-kernel estimates vary from
+\(883.61\,\mu\mathrm{s}\) to
+\(1080.90\,\mu\mathrm{s}\), which is why the comparison is made
+within each run rather than by combining absolute times collected at
+different moments.
+
+The monomial backend comparison is less stable.  The same-run ratios range
+from
+\[
+0.7544\times
+\quad\text{to}\quad
+1.2369\times,
+\]
+and one invocation reverses the ordering.  The data therefore do not
+support a claim that either arithmetic backend is systematically faster for
+the complete blocked monomial evaluator.  This contrasts with the kernel
+case and suggests that the specialized advantage is tied to the fold
+structure rather than to scalar field multiplication alone.
+
+\subsection{Cross-Representation Evaluation}
+\label{sec:cross-representation}
+
+We next compare the polynomial representations using one common Goldilocks
+backend.  At \(N=2^{20}\), the optimized Boolean-kernel evaluator requires
+\[
+1.0560\ \mathrm{ms},
+\]
+while the parallel monomial implementation requires
+\[
+1.4116\ \mathrm{ms}.
+\]
+The ratio is
+\[
+\frac{1.4116}{1.0560}
+=
+1.337.
+\]
+Equivalently, the Boolean-kernel evaluator uses
+\[
+25.2\%
+\]
+less wall time for this isolated evaluation primitive.
+
+The serial Horner method takes
+\[
+9.0402\ \mathrm{ms},
+\]
+which is
+\[
+8.561\times
+\]
+the kernel time.  Evaluation from the roots-of-unity Lagrange
+representation is more expensive for an arbitrary off-domain point:
+the parallel implementation takes
+\[
+17.1990\ \mathrm{ms},
+\]
+and the serial implementation
+\[
+21.3890\ \mathrm{ms}.
+\]
+These numbers characterize only arbitrary single-point evaluation from the
+given representation; they do not imply that evaluation-form
+representations are generally inefficient in workloads that operate
+directly on the evaluation domain.
+
+\subsection{Scaling with the Polynomial Size}
+\label{sec:scaling}
+
+Figure~\ref{fig:scaling} reports the complete cross-basis sweep from
+\(N=2^{10}\) to \(N=2^{20}\).  The vertical axis is logarithmic in time.
+The figure plays the same role as the global result plots in the reference
+performance study: it shows the complete set of principal algorithms before
+the individual measurements are interpreted.
+
+\begin{figure}[ht]
+\centering
+\setlength{\unitlength}{1mm}
+\begin{picture}(154,72)
+\put(16,8){\vector(1,0){102}}
+\put(16,8){\vector(0,1){58}}
+\put(2,64){\makebox(14,4)[r]{\scriptsize time}}
+\put(116,2){\makebox(12,4)[l]{\scriptsize \(N\)}}
+\put(20,7){\line(0,1){2}}
+\put(16,1){\makebox(8,4)[c]{\scriptsize \(2^{10}\)}}
+\put(38,7){\line(0,1){2}}
+\put(34,1){\makebox(8,4)[c]{\scriptsize \(2^{12}\)}}
+\put(56,7){\line(0,1){2}}
+\put(52,1){\makebox(8,4)[c]{\scriptsize \(2^{14}\)}}
+\put(74,7){\line(0,1){2}}
+\put(70,1){\makebox(8,4)[c]{\scriptsize \(2^{16}\)}}
+\put(92,7){\line(0,1){2}}
+\put(88,1){\makebox(8,4)[c]{\scriptsize \(2^{18}\)}}
+\put(110,7){\line(0,1){2}}
+\put(106,1){\makebox(8,4)[c]{\scriptsize \(2^{20}\)}}
+\put(15,15.1){\line(1,0){2}}
+\put(1,13.6){\makebox(13,3)[r]{\scriptsize 10 us}}
+\put(15,29.2){\line(1,0){2}}
+\put(1,27.7){\makebox(13,3)[r]{\scriptsize 100 us}}
+\put(15,43.3){\line(1,0){2}}
+\put(1,41.8){\makebox(13,3)[r]{\scriptsize 1 ms}}
+\put(15,57.3){\line(1,0){2}}
+\put(1,55.8){\makebox(13,3)[r]{\scriptsize 10 ms}}
+\put(20,10.0){\circle*{1.8}}
+\put(38,18.3){\circle*{1.8}}
+\put(56,26.0){\circle*{1.8}}
+\put(74,28.6){\circle*{1.8}}
+\put(92,35.1){\circle*{1.8}}
+\put(110,43.6){\circle*{1.8}}
+\qbezier(20,10.0)(29.0,14.15)(38,18.3)
+\qbezier(38,18.3)(47.0,22.15)(56,26.0)
+\qbezier(56,26.0)(65.0,27.3)(74,28.6)
+\qbezier(74,28.6)(83.0,31.85)(92,35.1)
+\qbezier(92,35.1)(101.0,39.35)(110,43.6)
+\put(20,14.2){\circle{2.2}}
+\put(38,22.7){\circle{2.2}}
+\put(56,26.9){\circle{2.2}}
+\put(74,31.2){\circle{2.2}}
+\put(92,37.4){\circle{2.2}}
+\put(110,45.4){\circle{2.2}}
+\qbezier(20,14.2)(29.0,18.45)(38,22.7)
+\qbezier(38,22.7)(47.0,24.799999999999997)(56,26.9)
+\qbezier(56,26.9)(65.0,29.049999999999997)(74,31.2)
+\qbezier(74,31.2)(83.0,34.3)(92,37.4)
+\qbezier(92,37.4)(101.0,41.4)(110,45.4)
+\put(18.9,13.200000000000001){\framebox(2.2,2.2){}}
+\put(36.9,21.7){\framebox(2.2,2.2){}}
+\put(54.9,30.4){\framebox(2.2,2.2){}}
+\put(72.9,38.6){\framebox(2.2,2.2){}}
+\put(90.9,47.1){\framebox(2.2,2.2){}}
+\put(108.9,55.6){\framebox(2.2,2.2){}}
+\qbezier(20,14.3)(29.0,18.55)(38,22.8)
+\qbezier(38,22.8)(47.0,27.15)(56,31.5)
+\qbezier(56,31.5)(65.0,35.6)(74,39.7)
+\qbezier(74,39.7)(83.0,43.95)(92,48.2)
+\qbezier(92,48.2)(101.0,52.45)(110,56.7)
+\put(20,29.8){\circle*{1.8}}
+\put(38,34.8){\circle*{1.8}}
+\put(56,38.2){\circle*{1.8}}
+\put(74,44.6){\circle*{1.8}}
+\put(92,52.5){\circle*{1.8}}
+\put(110,60.7){\circle*{1.8}}
+\qbezier(20,29.8)(29.0,32.3)(38,34.8)
+\qbezier(38,34.8)(47.0,36.5)(56,38.2)
+\qbezier(56,38.2)(65.0,41.400000000000006)(74,44.6)
+\qbezier(74,44.6)(83.0,48.55)(92,52.5)
+\qbezier(92,52.5)(101.0,56.6)(110,60.7)
+\put(20,19.8){\circle{2.2}}
+\put(38,28.1){\circle{2.2}}
+\put(56,36.6){\circle{2.2}}
+\put(74,45.1){\circle{2.2}}
+\put(92,53.5){\circle{2.2}}
+\put(110,62.0){\circle{2.2}}
+\qbezier(20,19.8)(29.0,23.950000000000003)(38,28.1)
+\qbezier(38,28.1)(47.0,32.35)(56,36.6)
+\qbezier(56,36.6)(65.0,40.85)(74,45.1)
+\qbezier(74,45.1)(83.0,49.3)(92,53.5)
+\qbezier(92,53.5)(101.0,57.75)(110,62.0)
+\put(122,60){\circle*{1.8}}
+\put(126,58.5){\makebox(24,3)[l]{\scriptsize \(K\)}}
+\put(122,53){\circle{2.2}}
+\put(126,51.5){\makebox(24,3)[l]{\scriptsize \(M_p\)}}
+\put(120.9,44.9){\framebox(2.2,2.2){}}
+\put(126,44.5){\makebox(24,3)[l]{\scriptsize \(M_h\)}}
+\put(122,39){\circle*{1.8}}
+\put(126,37.5){\makebox(24,3)[l]{\scriptsize \(L_p\)}}
+\put(122,32){\circle{2.2}}
+\put(126,30.5){\makebox(24,3)[l]{\scriptsize \(L_s\)}}
+\end{picture}
+\caption{Single-point evaluation time as a function of \(N\) for the five
+implementations in the common cross-basis benchmark.  \(K\): optimized
+Boolean-kernel; \(M_p\): parallel blocked monomial; \(M_h\): serial Horner;
+\(L_p\): parallel Lagrange; \(L_s\): serial Lagrange.  The vertical
+placement is logarithmic in measured time.}
+\label{fig:scaling}
+\end{figure}
+
+The small-size regime is affected strongly by parallel scheduling and fixed
+overheads.  At \(N=2^{10}\), the kernel evaluator takes approximately half
+the time of the parallel monomial evaluator, but the absolute difference is
+only a few microseconds.  At \(N=2^{14}\), the two parallel methods become
+closer, with a ratio of approximately
+\[
+1.169\times.
+\]
+For larger inputs the separation grows again.  At \(N=2^{18}\), the
+parallel monomial evaluator is
+\[
+1.447\times
+\]
+the kernel time, and at \(N=2^{20}\) the ratio is
+\[
+1.337\times.
+\]
+
+The serial Horner curve grows linearly with a long dependency chain and
+separates rapidly from the two parallel implementations.  The two Lagrange
+curves have the largest constants because arbitrary off-domain evaluation
+includes denominator construction, batch inversion, and a full linear
+accumulation.
+
+\subsection{Interpretation}
+\label{sec:results-interpretation}
+
+The measurements support two separate conclusions.  First, the
+Boolean-kernel representation gives a lower single-point evaluation time
+than the fair parallel monomial baseline in the common \(N=2^{20}\)
+benchmark.  Second, this advantage cannot be explained by a generally
+faster scalar field multiplication: isolated Goldilocks and Montgomery
+multiplication are nearly tied, whereas the specialized Boolean-kernel fold
+and the complete specialized kernel evaluator show a clear advantage.
+
+The result is therefore an interaction between representation and
+implementation.  The Boolean-kernel basis exposes a balanced reduction
+tree, and the Goldilocks modulus permits the arithmetic inside each fold to
+be specialized as one compound operation.  The benchmark does not establish
+a corresponding whole-prover speedup.  Whether the gain survives in a
+proof system depends on how long the polynomial can remain in the
+Boolean-kernel representation and on the cost of any required basis
+conversion.

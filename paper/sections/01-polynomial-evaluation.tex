@@ -6,11 +6,12 @@ Let
 P(X)=a_0+a_1X+\cdots+a_nX^n,\qquad a_i\in\mathbb{F},
 \]
 where \(\mathbb{F}\) is a finite field.  A large number of evaluation
-schemes can be used for the computation of \(P(x)\).  In this study we
-retain the schemes that correspond to the representations used in the
-benchmark: the classical Horner method, a blocked Horner method exposing
-parallelism, evaluation from values on a roots-of-unity domain, and the
-Boolean-kernel representation.
+schemes can be used for the computation of \(P(x)\), and their arithmetic
+complexity need not predict their performance on an out-of-order processor
+\cite{ewart2020}.  In this study we retain the schemes that correspond to
+the representations used in the benchmark: the classical Horner method, a
+blocked Horner method exposing parallelism, evaluation from values on a
+roots-of-unity domain, and the Boolean-kernel representation.
 
 As in classical studies of polynomial evaluation, the first comparison is
 made in terms of arithmetic operations.  Table~\ref{tab:arith-structure}
@@ -162,7 +163,9 @@ L_i(x)
      {N(x-\omega^i)}.
 \]
 
-The denominators
+The expression is the roots-of-unity specialization of the Lagrange
+interpolation formula; barycentric forms of Lagrange interpolation are
+reviewed in \cite{berrut2004}.  The denominators
 \[
 x-\omega^i
 \]

@@ -38,10 +38,12 @@ levels, \(m=\log_2 N\), rather than with the number of coefficients.
 \label{sec:architecture}
 
 The measurements reported in this study were obtained on an Apple M1
-processor.  The M1 is an out-of-order superscalar processor.  Several
-integer operations can be in flight simultaneously, provided that the
-instruction scheduler can find independent work.  This property is
-important for the present comparison because Horner evaluation, blocked
+processor.  The comparison follows the same general processor-oriented
+principle used in earlier work on polynomial evaluation: arithmetic count
+alone is insufficient when evaluation schemes expose different dependency
+graphs \cite{ewart2020}.  The M1 is an out-of-order superscalar processor,
+so several integer operations can be in flight simultaneously when the
+instruction scheduler finds independent work.  Horner evaluation, blocked
 Horner evaluation, and the Boolean-kernel tree expose very different
 amounts of instruction-level and task-level parallelism.
 

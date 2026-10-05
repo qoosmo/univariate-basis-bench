@@ -42,19 +42,26 @@ graph, and the field-arithmetic implementation.
 \end{abstract}
 
 Polynomial evaluation is among the elementary operations on which more
-complex numerical and algebraic software is built.  The classical
-algorithms are well understood: Horner's rule minimizes the number of
-general multiplications for a dense polynomial in monomial form, while
-divide-and-conquer schemes expose more independent operations at the price
-of additional work.  In applications that already store a polynomial by
-its values on a structured domain, interpolation formulas provide another
-route to an arbitrary evaluation point.
+complex numerical and algebraic software is built.  Classical evaluation
+schemes and their interaction with processor parallelism have been studied
+extensively; recent processor-oriented comparisons include
+Ewart et al.~\cite{ewart2020}.  Horner's rule gives a compact recurrence for
+a dense polynomial in monomial form, while divide-and-conquer schemes
+expose more independent operations at the price of additional work.  In
+applications that store a polynomial by its values on a structured domain,
+interpolation formulas provide another route to an arbitrary evaluation
+point; barycentric Lagrange interpolation is a standard example
+\cite{berrut2004}.
 
-The operation is also present in polynomial commitment schemes and
-transparent proof systems.  In such systems, a polynomial may be stored in
-coefficient form, as evaluations on a domain, or in a representation chosen
-to simplify a later protocol stage.  Consequently, the cost of evaluating
-at a verifier-derived point depends not only on the degree but also on the
+The operation is also present in transparent proof systems and their
+polynomial subroutines.  FRI, for example, operates on Reed--Solomon codewords
+and repeatedly reduces polynomial degree by structured folding
+\cite{fri2018}, while STARK constructions combine such polynomial machinery
+with transparent computational-integrity protocols \cite{stark2018}.  In
+these settings, a polynomial may be stored in coefficient form, as
+evaluations on a domain, or in another representation chosen to simplify a
+later protocol stage.  Consequently, the cost of evaluating at a
+verifier-derived point depends not only on the degree but also on the
 representation in which the polynomial is available.
 
 Arithmetic counts alone do not determine execution time on a modern

@@ -1,0 +1,455 @@
+\section{Boolean-Kernel Evaluation}
+\label{sec:evaluation}
+
+We now derive the single-point evaluation algorithm for the
+Boolean-kernel representation introduced in \cref{sec:representations}.
+
+Let
+\[
+P(X)
+=
+\sum_{y\in\{0,1\}^m}
+c_y
+\prod_{i=0}^{m-1}
+\left(X^{2^i}+y_i\right),
+\]
+and fix an evaluation point
+\[
+x\in\mathbb{F}.
+\]
+Define
+\[
+t_i=x^{2^i},
+\qquad
+0\le i<m.
+\]
+
+The key observation is that two basis polynomials whose indices differ
+only in one Boolean coordinate can be combined locally.
+
+\subsection{The elementary fold identity}
+
+Fix a level \(i\).  Let
+\[
+u=(u_0,\ldots,u_{i-1},u_{i+1},\ldots,u_{m-1})
+\in\{0,1\}^{m-1}
+\]
+denote the common values of all Boolean coordinates other than \(i\).
+Let
+\[
+K_{u,0}(X)
+\]
+and
+\[
+K_{u,1}(X)
+\]
+denote the two kernel polynomials whose \(i\)-th coordinate is respectively
+\(0\) and \(1\).
+
+By definition,
+\[
+K_{u,0}(X)
+=
+X^{2^i}
+\prod_{j\ne i}
+\left(X^{2^j}+u_j\right),
+\]
+while
+\[
+K_{u,1}(X)
+=
+\left(X^{2^i}+1\right)
+\prod_{j\ne i}
+\left(X^{2^j}+u_j\right).
+\]
+
+Suppose the corresponding coefficients are
+\[
+a,b\in\mathbb{F}.
+\]
+Their contribution to \(P(x)\) is
+\[
+aK_{u,0}(x)+bK_{u,1}(x).
+\]
+Factoring the common part gives
+\[
+\begin{aligned}
+aK_{u,0}(x)+bK_{u,1}(x)
+&=
+\left(
+a\,x^{2^i}
++
+b(x^{2^i}+1)
+\right)
+\prod_{j\ne i}
+\left(x^{2^j}+u_j\right)
+\\
+&=
+\left(
+x^{2^i}(a+b)+b
+\right)
+\prod_{j\ne i}
+\left(x^{2^j}+u_j\right).
+\end{aligned}
+\]
+
+Therefore, after eliminating Boolean coordinate \(i\), the two
+coefficients \(a\) and \(b\) are replaced by the single coefficient
+\[
+\boxed{
+F_{t_i}(a,b)
+=
+t_i(a+b)+b
+}
+\]
+with
+\[
+t_i=x^{2^i}.
+\]
+
+\begin{lemma}[Pair-fold identity]
+\label{lem:pair-fold}
+Let \(a,b\in\mathbb{F}\), let \(i\in\{0,\ldots,m-1\}\), and let \(u\)
+fix all Boolean coordinates other than \(i\).  Then
+\[
+aK_{u,0}(x)+bK_{u,1}(x)
+=
+F_{t_i}(a,b)
+\prod_{j\ne i}
+\left(x^{2^j}+u_j\right),
+\]
+where
+\[
+F_{t_i}(a,b)=t_i(a+b)+b.
+\]
+\end{lemma}
+
+\begin{proof}
+The identity follows directly from the factorization above.
+\end{proof}
+
+\subsection{Recursive reduction}
+
+The pair-fold identity can be applied recursively over all Boolean
+coordinates.  We use the coefficient ordering in which the integer index
+\[
+y=\sum_{i=0}^{m-1}y_i2^i
+\]
+stores the Boolean vector
+\[
+(y_0,\ldots,y_{m-1}).
+\]
+Hence the least significant bit corresponds to the first folding level.
+
+Let
+\[
+v^{(0)}_j=c_j,
+\qquad
+0\le j<N.
+\]
+After level \(i\), the active vector has length
+\[
+N_i=\frac{N}{2^i}.
+\]
+
+For
+\[
+0\le j<\frac{N_i}{2},
+\]
+define
+\[
+v^{(i+1)}_j
+=
+F_{t_i}
+\left(
+v^{(i)}_{2j},
+v^{(i)}_{2j+1}
+\right).
+\]
+Equivalently,
+\[
+v^{(i+1)}_j
+=
+t_i
+\left(
+v^{(i)}_{2j}
++
+v^{(i)}_{2j+1}
+\right)
++
+v^{(i)}_{2j+1}.
+\]
+
+After \(m\) levels only one field element remains.
+
+\begin{theorem}[Correctness of Boolean-kernel evaluation]
+\label{thm:kernel-eval-correct}
+Let
+\[
+P(X)
+=
+\sum_{y\in\{0,1\}^m}
+c_yK_y(X).
+\]
+Construct the vectors
+\[
+v^{(0)},v^{(1)},\ldots,v^{(m)}
+\]
+by the recurrence above using
+\[
+t_i=x^{2^i}.
+\]
+Then
+\[
+v^{(m)}_0=P(x).
+\]
+\end{theorem}
+
+\begin{proof}
+We prove a stronger invariant.
+
+After completing levels
+\[
+0,1,\ldots,i-1,
+\]
+the vector \(v^{(i)}\) is indexed by the remaining Boolean coordinates
+\[
+(y_i,\ldots,y_{m-1}).
+\]
+For every remaining index
+\[
+z=(z_i,\ldots,z_{m-1})\in\{0,1\}^{m-i},
+\]
+the value \(v^{(i)}_z\) is the coefficient of
+\[
+\prod_{j=i}^{m-1}
+\left(X^{2^j}+z_j\right)
+\]
+after the already-eliminated coordinates
+\[
+0,\ldots,i-1
+\]
+have been evaluated at \(x\).
+
+The invariant is true for \(i=0\) by the original representation of
+\(P\).
+
+Assume it holds for some \(i<m\).  Pair entries whose remaining indices
+agree in every coordinate except \(y_i\).  By
+\cref{lem:pair-fold}, replacing such a pair
+\[
+(a,b)
+\]
+by
+\[
+F_{t_i}(a,b)
+\]
+exactly evaluates the factor associated with coordinate \(i\), while
+leaving the factors for coordinates
+\[
+i+1,\ldots,m-1
+\]
+unchanged.  Therefore the invariant holds for \(i+1\).
+
+After \(m\) levels no Boolean coordinates remain, so the unique surviving
+value is exactly
+\[
+P(x).
+\]
+\end{proof}
+
+\subsection{Exact arithmetic complexity}
+
+At level \(i\), the active vector has length
+\[
+\frac{N}{2^i},
+\]
+so the number of folds is
+\[
+\frac{N}{2^{i+1}}.
+\]
+Summing over all \(m\) levels gives
+\[
+\sum_{i=0}^{m-1}
+\frac{N}{2^{i+1}}
+=
+N
+\sum_{k=1}^{m}
+2^{-k}
+=
+N\left(1-\frac{1}{2^m}\right)
+=
+N-1.
+\]
+
+Therefore the evaluation tree contains exactly
+\[
+\boxed{N-1}
+\]
+folds.
+
+Each fold
+\[
+F_t(a,b)=t(a+b)+b
+\]
+contains, at the field-operation level,
+
+\[
+1
+\]
+multiplication and
+\[
+2
+\]
+additions.
+
+Hence the tree itself requires exactly
+\[
+\boxed{N-1}
+\]
+field multiplications and
+\[
+\boxed{2(N-1)}
+\]
+field additions.
+
+The level parameters are generated by
+\[
+t_0=x,
+\qquad
+t_{i+1}=t_i^2.
+\]
+Thus producing all
+\[
+t_0,\ldots,t_{m-1}
+\]
+requires
+\[
+\boxed{m-1}
+\]
+field squarings.
+
+We summarize the operation count in the following proposition.
+
+\begin{proposition}[Exact operation count]
+\label{prop:operation-count}
+For \(N=2^m\), Boolean-kernel single-point evaluation requires
+\[
+N-1
+\]
+kernel folds.  Using the direct fold formula, this corresponds to
+\[
+N-1
+\]
+field multiplications,
+\[
+2(N-1)
+\]
+field additions, and
+\[
+m-1
+\]
+field squarings for generation of the level parameters \(t_i\).
+\end{proposition}
+
+\subsection{Parallel structure}
+
+The dependency graph is a complete binary reduction tree.  At each fixed
+level \(i\), all folds operate on disjoint coefficient pairs and are
+therefore independent.
+
+The number of available independent folds at level \(i\) is
+\[
+\frac{N}{2^{i+1}}.
+\]
+Thus the lower levels expose abundant data parallelism, while the final
+levels contain progressively less work.
+
+A naive parallel implementation may synchronize globally after every tree
+level.  For large \(N\), however, such synchronization can dominate the
+shrinking amount of useful work near the top of the tree.  The optimized
+implementation studied later therefore groups multiple consecutive levels
+inside independent power-of-two subtrees and parallelizes only across
+those larger subtrees.
+
+This changes the scheduling strategy but not the arithmetic graph or the
+number of folds.
+
+\subsection{Input complexity}
+
+The evaluation algorithm uses
+\[
+O(N)
+\]
+field operations and reads an arbitrary vector of \(N\) coefficients.
+
+For the unrestricted problem considered here, this linear dependence on
+the input length is unavoidable in the worst case.  To see this, suppose
+an algorithm does not inspect some coefficient \(c_y\).  For any evaluation
+point \(x\) such that
+\[
+K_y(x)\ne0,
+\]
+changing only \(c_y\) changes
+\[
+P(x)
+\]
+while leaving all inspected coefficients unchanged.  Hence an algorithm
+that is correct on arbitrary coefficient vectors must in general obtain
+information about every coefficient.
+
+Accordingly, the principal optimization target is not the asymptotic
+complexity but the constant factor: field reduction, memory traffic,
+allocation, bounds checking, scheduling, and the organization of the fold
+tree.
+
+\subsection{Example for \(N=8\)}
+
+Let
+\[
+m=3,
+\qquad
+N=8.
+\]
+The input coefficient vector is
+\[
+(c_0,c_1,c_2,c_3,c_4,c_5,c_6,c_7).
+\]
+Set
+\[
+t_0=x,
+\qquad
+t_1=x^2,
+\qquad
+t_2=x^4.
+\]
+
+The first level computes
+\[
+\begin{aligned}
+u_0&=F_{t_0}(c_0,c_1),\\
+u_1&=F_{t_0}(c_2,c_3),\\
+u_2&=F_{t_0}(c_4,c_5),\\
+u_3&=F_{t_0}(c_6,c_7).
+\end{aligned}
+\]
+
+The second level computes
+\[
+\begin{aligned}
+w_0&=F_{t_1}(u_0,u_1),\\
+w_1&=F_{t_1}(u_2,u_3).
+\end{aligned}
+\]
+
+Finally,
+\[
+P(x)=F_{t_2}(w_0,w_1).
+\]
+
+The tree uses
+\[
+4+2+1=7=N-1
+\]
+folds, illustrating the general count of
+\cref{prop:operation-count}.

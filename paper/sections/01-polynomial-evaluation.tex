@@ -3,73 +3,374 @@
 
 Let
 \[
-P(X)=a_0+a_1X+\cdots+a_nX^n
+P(X)=a_0+a_1X+\cdots+a_nX^n,\qquad a_i\in\mathbb{F},
 \]
-be a univariate polynomial over a finite field \(\mathbb{F}\).  Several
-representations and evaluation algorithms can be used for the computation
-of \(P(x)\).  We retain three cases in this study.  The first is the
-monomial representation, evaluated by Horner's rule and by a blocked
-parallel variant.  The second stores the values of the polynomial on a
-roots-of-unity domain and evaluates an off-domain point using the
-corresponding Lagrange formula.  The third is the Boolean-kernel
-representation introduced above.
+where \(\mathbb{F}\) is a finite field.  A large number of evaluation
+schemes can be used for the computation of \(P(x)\).  In this study we
+retain the schemes that correspond to the representations used in the
+benchmark: the classical Horner method, a blocked Horner method exposing
+parallelism, evaluation from values on a roots-of-unity domain, and the
+Boolean-kernel representation.
 
-The methods do not expose the same arithmetic structure.  Horner's rule
-uses a small number of operations but forms one long recurrence.  The
-Boolean-kernel method uses a binary tree whose nodes at a fixed level are
-independent.  Evaluation from a Lagrange domain has linear arithmetic work
-for a single arbitrary point, but also requires inversion of all
-denominators; in the implementation considered here this is carried out by
-one batch inversion.
-
-Table~\ref{tab:arith-structure} summarizes the arithmetic structure before
-processor-specific optimizations.  For the Boolean-kernel row,
-\(N=2^m\) denotes the number of coefficients.  The Lagrange row describes
-the batch-inversion organization rather than a single exact multiplication
-count, since that count depends on which domain constants and inverses are
-precomputed.
+As in classical studies of polynomial evaluation, the first comparison is
+made in terms of arithmetic operations.  Table~\ref{tab:arith-structure}
+summarizes the main costs.  These counts do not yet include the cost of the
+modular reduction used to realize a field multiplication.  This point will
+be treated separately because the Goldilocks modulus allows more than one
+reasonable multiplication strategy.
 
 \begin{table}[ht]
 \centering
 \caption{Arithmetic structure of the evaluation methods considered in this
-study.  The counts describe field operations before low-level reduction
-optimizations.}
+study.  For the last two rows \(N=2^m\).}
 \label{tab:arith-structure}
 \begin{tabular}{llll}
 \toprule
-Representation & Evaluation method & Arithmetic work & Dependency structure\\
+Method & Multiplications & Additions & Main dependency\\
 \midrule
-Monomial &
 Horner &
-\(n\) mul., \(n\) add. &
-single chain\\
+\(n\) &
+\(n\) &
+chain of length \(n\)\\
 
-Monomial &
-blocked Horner &
-\(O(n)\) &
+Blocked Horner &
+\(n+\theta(B)\) &
+\(n\) &
 independent blocks\\
 
-Roots-of-unity values &
-Lagrange / batch inversion &
-\(O(N)\) mul., one batch inv. &
-parallel sums, serial batch scan\\
+Lagrange, batch inversion &
+\(O(N)\)+one inversion &
+\(O(N)\) &
+two linear scans\\
 
-Boolean-kernel &
-binary fold &
-\(N-1\) mul., \(2(N-1)\) add.,
-\(m-1\) sqr. &
-binary reduction tree\\
+Boolean-kernel fold &
+\(N-1\) &
+\(2(N-1)\) &
+binary tree\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The usual operation count is therefore only a first indication of cost.
-The blocked monomial and Boolean-kernel methods deliberately expose more
-independent work than classical Horner evaluation.  Whether this
-parallelism compensates for the additional additions, exponent generation,
-or reduction overhead is an architectural question and is measured later.
+The number of operations gives useful information, but it is not sufficient
+to predict the execution time.  Horner's rule has the smallest and most
+regular operation count, but its successive multiply-add steps form a
+dependency chain.  The blocked Horner and Boolean-kernel methods expose
+independent operations.  The Lagrange method requires more arithmetic and
+temporary storage, but part of its work is also parallel.  The relation
+between these properties and the measured execution time is one of the
+questions considered in this article.
 
-In the remainder of this section we describe each representation and its
-evaluation rule.  The Boolean-kernel method is treated last, after the two
-reference representations, so that its additional algebraic structure can
-be compared directly with the conventional cases.
+\subsection{Horner Method: Classical}
+\label{sec:horner}
+
+The classical Horner method evaluates the monomial representation
+recursively.  For an input value \(x\),
+\[
+P(x)
+=
+a_0+x\left(
+a_1+x\left(
+a_2+\cdots+x a_n
+\right)\right).
+\]
+Starting from the highest coefficient, the recurrence is
+\[
+r_n=a_n,\qquad
+r_i=a_i+xr_{i+1},
+\qquad i=n-1,\ldots,0,
+\]
+and \(P(x)=r_0\).
+
+The method uses \(n\) field multiplications and \(n\) field additions.  Its
+advantage is therefore clear from the arithmetic point of view.  The
+drawback is also immediate: \(r_i\) cannot be computed before
+\(r_{i+1}\).  The critical path contains all \(n\) multiplication steps.
+For large \(n\), the execution of one polynomial gives little
+instruction-level parallelism even when the processor has several
+execution units available.
+
+\subsection{Horner Method: Blocked}
+\label{sec:blocked-horner}
+
+The dependency chain can be shortened by splitting the coefficients into
+blocks.  Let \(B\) be a block size and, for simplicity, suppose that
+\(N=n+1\) is divisible by \(B\).  Write
+\[
+P(X)
+=
+\sum_{j=0}^{q-1} X^{jB}P_j(X),
+\qquad
+q=\frac{N}{B},
+\]
+where
+\[
+P_j(X)
+=
+a_{jB}+a_{jB+1}X+\cdots+a_{jB+B-1}X^{B-1}.
+\]
+
+The \(q\) polynomials \(P_j(x)\) are independent and can be evaluated in
+parallel by the classical Horner method.  Once they have been computed,
+the final combination is another Horner recurrence, now in
+\[
+x^B:
+\qquad
+P(x)
+=
+P_0(x)
++
+x^B\left(
+P_1(x)+
+x^B\left(
+\cdots+
+x^B P_{q-1}(x)
+\right)\right).
+\]
+
+Ignoring the cost \(\theta(B)\) required to obtain \(x^B\), the block
+evaluations and the final combination together use \(n\) field
+multiplications and \(n\) field additions.  The arithmetic count is thus
+close to the classical method, but the critical path is reduced because
+the block evaluations can proceed concurrently.  In the implementation
+used later, the blocks are distributed between Rayon workers and the final
+combination is performed after the local Horner evaluations.
+
+\subsection{Lagrange Representation on a Roots-of-Unity Domain}
+\label{sec:lagrange}
+
+A polynomial may also be represented by its values on a structured
+evaluation domain.  Let
+\[
+H=
+\{1,\omega,\omega^2,\ldots,\omega^{N-1}\},
+\]
+where \(\omega\) is a primitive \(N\)-th root of unity, and let
+\[
+v_i=P(\omega^i).
+\]
+For a point \(x\notin H\), the Lagrange formula reads
+\[
+P(x)=
+\sum_{i=0}^{N-1}
+v_i L_i(x),
+\]
+with
+\[
+L_i(x)
+=
+\frac{(x^N-1)\omega^i}
+     {N(x-\omega^i)}.
+\]
+
+The denominators
+\[
+x-\omega^i
+\]
+may be inverted together by the standard batch-inversion technique.  The
+implementation therefore replaces \(N\) independent field inversions by
+one field inversion and two linear multiplication scans.  The remaining
+numerator accumulation is linear in \(N\), and it admits a parallel
+reduction.
+
+This representation is common when the surrounding computation already
+uses evaluations on a roots-of-unity domain.  For one arbitrary
+off-domain point, however, the evaluation requires substantially more
+field arithmetic and temporary memory than Horner's rule.  The benchmark
+in Section~\ref{sec:results} measures this cost directly.
+
+\subsection{Boolean-Kernel Representation}
+\label{sec:boolean-kernel}
+
+We now consider the representation used in this work.  Let
+\[
+N=2^m
+\]
+and identify an integer
+\[
+0\le y<N
+\]
+with its binary vector
+\[
+y=(y_0,\ldots,y_{m-1})\in\{0,1\}^m.
+\]
+For each such vector define
+\[
+K_y(X)
+=
+\prod_{i=0}^{m-1}
+\left(X^{2^i}+y_i\right).
+\]
+Every \(K_y\) has degree \(N-1\), and the family
+\[
+\{K_y : y\in\{0,1\}^m\}
+\]
+forms a basis of the vector space of polynomials of degree smaller than
+\(N\).  We write
+\[
+P(X)
+=
+\sum_{y\in\{0,1\}^m}
+c_yK_y(X).
+\]
+
+The basis differs from the monomial basis in an important point.  Its
+elements share a product structure indexed by the bits of \(y\).  At a
+fixed point \(x\), the factor associated with bit \(i\) is either
+\[
+x^{2^i}
+\]
+or
+\[
+x^{2^i}+1.
+\]
+Pairs of coefficients that differ only in this bit can therefore be
+combined before the remaining factors are evaluated.
+
+The change of basis from monomial coefficients can be expressed as a
+Boolean zeta/Möbius transform and requires \(O(N\log N)\) field additions.
+That conversion is not included in the isolated single-point evaluation
+benchmark.  As with the Lagrange representation, the benchmark assumes that
+the polynomial is already available in the representation under study.
+
+\subsection{Boolean-Kernel Evaluation by Folding}
+\label{sec:kernel-fold}
+
+Let
+\[
+t_i=x^{2^i}.
+\]
+Consider two terms whose Boolean indices agree except at coordinate \(i\).
+After factoring all the common kernel factors, their contribution has the
+form
+\[
+a\,t_i+b(t_i+1).
+\]
+It can be replaced by the single coefficient
+\[
+F_{t_i}(a,b)
+=
+t_i(a+b)+b.
+\]
+Thus one Boolean coordinate is eliminated by the local transformation
+\[
+\boxed{
+(a,b)\longmapsto t_i(a+b)+b.
+}
+\]
+
+Starting from the vector
+\[
+(c_0,c_1,\ldots,c_{N-1}),
+\]
+the first level combines adjacent pairs using \(t_0=x\).  The next level
+combines adjacent results using \(t_1=x^2\), and the process continues with
+\[
+t_{i+1}=t_i^2
+\]
+until one field element remains.  The final value is \(P(x)\).
+
+At level \(i\), the number of folds is
+\[
+\frac{N}{2^{i+1}}.
+\]
+The total number is therefore
+\[
+\frac{N}{2}
++\frac{N}{4}
++\cdots+1
+=
+N-1.
+\]
+Each fold contains one field multiplication and two field additions.  The
+evaluation consequently uses
+\[
+N-1
+\]
+multiplications,
+\[
+2(N-1)
+\]
+additions, and
+\[
+m-1
+\]
+squarings for the sequence \(t_0,\ldots,t_{m-1}\).
+
+Figure~\ref{fig:dependency} compares the dependency graph with the
+classical Horner recurrence for a small instance.  The Horner graph is one
+chain.  The Boolean-kernel graph has the same logarithmic number of levels
+as a balanced reduction tree, with all nodes at one level independent.
+
+\begin{figure}[ht]
+\centering
+\setlength{\unitlength}{0.82mm}
+\begin{picture}(150,58)
+
+% Horner chain
+\put(3,52){\makebox(55,4)[c]{\small (a) Horner dependency chain}}
+\put(8,40){\circle{6}}
+\put(8,40){\makebox(0,0){\scriptsize \(a_7\)}}
+\put(22,40){\circle{6}}
+\put(22,40){\makebox(0,0){\scriptsize \(r_6\)}}
+\put(36,40){\circle{6}}
+\put(36,40){\makebox(0,0){\scriptsize \(r_5\)}}
+\put(50,40){\circle{6}}
+\put(50,40){\makebox(0,0){\scriptsize \(\cdots\)}}
+\put(64,40){\circle{6}}
+\put(64,40){\makebox(0,0){\scriptsize \(r_0\)}}
+\put(11,40){\vector(1,0){8}}
+\put(25,40){\vector(1,0){8}}
+\put(39,40){\vector(1,0){8}}
+\put(53,40){\vector(1,0){8}}
+
+% Kernel tree
+\put(88,52){\makebox(56,4)[c]{\small (b) Boolean-kernel reduction}}
+\put(82,8){\circle{5}}\put(82,8){\makebox(0,0){\scriptsize \(c_0\)}}
+\put(92,8){\circle{5}}\put(92,8){\makebox(0,0){\scriptsize \(c_1\)}}
+\put(102,8){\circle{5}}\put(102,8){\makebox(0,0){\scriptsize \(c_2\)}}
+\put(112,8){\circle{5}}\put(112,8){\makebox(0,0){\scriptsize \(c_3\)}}
+\put(122,8){\circle{5}}\put(122,8){\makebox(0,0){\scriptsize \(c_4\)}}
+\put(132,8){\circle{5}}\put(132,8){\makebox(0,0){\scriptsize \(c_5\)}}
+\put(142,8){\circle{5}}\put(142,8){\makebox(0,0){\scriptsize \(c_6\)}}
+\put(152,8){\circle{5}}\put(152,8){\makebox(0,0){\scriptsize \(c_7\)}}
+
+\put(87,23){\circle{6}}\put(87,23){\makebox(0,0){\scriptsize \(F_0\)}}
+\put(107,23){\circle{6}}\put(107,23){\makebox(0,0){\scriptsize \(F_0\)}}
+\put(127,23){\circle{6}}\put(127,23){\makebox(0,0){\scriptsize \(F_0\)}}
+\put(147,23){\circle{6}}\put(147,23){\makebox(0,0){\scriptsize \(F_0\)}}
+
+\put(97,37){\circle{6}}\put(97,37){\makebox(0,0){\scriptsize \(F_1\)}}
+\put(137,37){\circle{6}}\put(137,37){\makebox(0,0){\scriptsize \(F_1\)}}
+
+\put(117,50){\circle{6}}\put(117,50){\makebox(0,0){\scriptsize \(F_2\)}}
+
+\put(83,10){\line(1,3){3.2}}
+\put(91,10){\line(-1,3){3.2}}
+\put(103,10){\line(1,3){3.2}}
+\put(111,10){\line(-1,3){3.2}}
+\put(123,10){\line(1,3){3.2}}
+\put(131,10){\line(-1,3){3.2}}
+\put(143,10){\line(1,3){3.2}}
+\put(151,10){\line(-1,3){3.2}}
+
+\put(89,25){\line(2,3){6}}
+\put(105,25){\line(-2,3){6}}
+\put(129,25){\line(2,3){6}}
+\put(145,25){\line(-2,3){6}}
+
+\put(99,39){\line(3,2){15}}
+\put(135,39){\line(-3,2){15}}
+
+\end{picture}
+\caption{Dependency graphs for \(N=8\).  The classical Horner method
+forms a single recurrence.  The Boolean-kernel method has four independent
+folds at the first level, two at the second, and one at the last level.
+Here \(F_i(a,b)=x^{2^i}(a+b)+b\).}
+\label{fig:dependency}
+\end{figure}
+
+The two graphs illustrate the principal difference considered in the
+performance study.  Horner's method performs fewer additions and has a very
+compact implementation, whereas the Boolean-kernel method trades additional
+addition work for a much shorter critical path and a large amount of
+independent work in the lower levels of the tree.

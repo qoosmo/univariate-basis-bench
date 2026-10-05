@@ -1,0 +1,358 @@
+\section{Experimental Results}
+\label{sec:results}
+
+This section reports the final cross-basis benchmark collected in a single
+run using the same machine, compiler configuration, Goldilocks backend, and
+Criterion methodology for every representation.
+
+The final comparison includes:
+
+\begin{enumerate}
+    \item the optimized Boolean-kernel evaluator;
+    \item the blocked parallel monomial evaluator with block size \(4096\);
+    \item serial Horner evaluation;
+    \item parallel roots-of-unity Lagrange evaluation using batch inversion;
+    \item serial roots-of-unity Lagrange evaluation using batch inversion.
+\end{enumerate}
+
+For every input size, all five methods represent the same deterministic
+polynomial and are checked for equality at the evaluation point before
+timing.
+
+\subsection{Cross-basis scaling}
+
+\cref{tab:final-basis-results} reports the Criterion central estimates for
+all six tested sizes.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+\(N\) &
+Kernel &
+Monomial par. &
+Horner &
+Lagrange par. &
+Lagrange ser. \\
+\midrule
+\(2^{10}\) &
+\(4.343\,\mu\mathrm{s}\) &
+\(8.613\,\mu\mathrm{s}\) &
+\(8.708\,\mu\mathrm{s}\) &
+\(109.710\,\mu\mathrm{s}\) &
+\(21.612\,\mu\mathrm{s}\) \\
+
+\(2^{12}\) &
+\(16.975\,\mu\mathrm{s}\) &
+\(34.599\,\mu\mathrm{s}\) &
+\(35.491\,\mu\mathrm{s}\) &
+\(250.220\,\mu\mathrm{s}\) &
+\(84.269\,\mu\mathrm{s}\) \\
+
+\(2^{14}\) &
+\(59.153\,\mu\mathrm{s}\) &
+\(69.174\,\mu\mathrm{s}\) &
+\(146.720\,\mu\mathrm{s}\) &
+\(439.930\,\mu\mathrm{s}\) &
+\(334.240\,\mu\mathrm{s}\) \\
+
+\(2^{16}\) &
+\(91.116\,\mu\mathrm{s}\) &
+\(139.480\,\mu\mathrm{s}\) &
+\(558.910\,\mu\mathrm{s}\) &
+\(1.2503\,\mathrm{ms}\) &
+\(1.3391\,\mathrm{ms}\) \\
+
+\(2^{18}\) &
+\(263.230\,\mu\mathrm{s}\) &
+\(380.910\,\mu\mathrm{s}\) &
+\(2.2440\,\mathrm{ms}\) &
+\(4.5612\,\mathrm{ms}\) &
+\(5.3679\,\mathrm{ms}\) \\
+
+\(2^{20}\) &
+\(1.0560\,\mathrm{ms}\) &
+\(1.4116\,\mathrm{ms}\) &
+\(9.0402\,\mathrm{ms}\) &
+\(17.1990\,\mathrm{ms}\) &
+\(21.3890\,\mathrm{ms}\) \\
+\bottomrule
+\end{tabular}
+\caption{Final same-run arbitrary-point evaluation benchmark over the
+Goldilocks field. Lower is better.}
+\label{tab:final-basis-results}
+\end{table}
+
+The Boolean-kernel evaluator is the fastest method at every tested size in
+this final sweep.
+
+\subsection{Headline result at \(N=2^{20}\)}
+
+For
+\[
+N=2^{20}=1{,}048{,}576,
+\]
+the optimized Boolean-kernel evaluator has Criterion interval
+\[
+[1.0009,\ 1.1132]\ \mathrm{ms}
+\]
+with central estimate
+\[
+\boxed{1.0560\ \mathrm{ms}}.
+\]
+
+The corresponding throughput is approximately
+\[
+\boxed{9.93\times10^8}
+\]
+input coefficients per second.
+
+The parallel monomial baseline has central estimate
+\[
+1.4116\ \mathrm{ms}.
+\]
+Thus, in the final same-run comparison,
+\[
+\frac{1.4116}{1.0560}
+=
+\boxed{1.337\times}.
+\]
+
+Equivalently, the Boolean-kernel evaluator uses approximately
+\[
+1-\frac{1.0560}{1.4116}
+\approx
+\boxed{25.2\%}
+\]
+less wall-clock time than the blocked parallel monomial evaluator.
+
+Against serial Horner evaluation,
+\[
+\frac{9.0402}{1.0560}
+=
+\boxed{8.56\times}.
+\]
+
+\subsection{Comparison with the Lagrange representation}
+
+At
+\[
+N=2^{20},
+\]
+parallel arbitrary-point evaluation from the roots-of-unity Lagrange
+representation requires
+\[
+17.199\ \mathrm{ms},
+\]
+while the serial version requires
+\[
+21.389\ \mathrm{ms}.
+\]
+
+Relative to the optimized Boolean-kernel evaluator, these correspond to
+\[
+\frac{17.199}{1.0560}
+=
+\boxed{16.29\times}
+\]
+and
+\[
+\frac{21.389}{1.0560}
+=
+\boxed{20.25\times},
+\]
+respectively.
+
+This result concerns \emph{arbitrary-point evaluation from the stored
+representation}.  It should not be interpreted as evidence that
+roots-of-unity evaluation form is generally inferior in a proof system.
+Evaluation form is highly advantageous for other workloads, including
+pointwise operations and FFT/NTT-based encoding.  The comparison instead
+shows that an arbitrary off-domain evaluation has a very different cost
+profile in the three representations considered here.
+
+\subsection{Scaling relative to the kernel evaluator}
+
+The ratio between each competitor and the Boolean-kernel evaluator changes
+with \(N\).  For the fair parallel monomial baseline, the measured ratios
+are approximately
+
+\[
+\begin{array}{c|cccccc}
+N &
+2^{10} &
+2^{12} &
+2^{14} &
+2^{16} &
+2^{18} &
+2^{20}
+\\
+\hline
+T_{\mathrm{mono,par}}/T_{\mathrm{kernel}}
+&
+1.98 &
+2.04 &
+1.17 &
+1.53 &
+1.45 &
+1.34
+\end{array}
+\]
+
+The non-monotonic behavior reflects the interaction between subtree
+parallelism, Rayon scheduling, cache behavior, and the fixed block size.
+It is therefore more appropriate to report the measured curve than to
+infer a constant hardware-independent speedup factor.
+
+For serial Horner evaluation, the ratio grows much more strongly with
+problem size:
+\[
+2.00,\ 2.09,\ 2.48,\ 6.13,\ 8.52,\ 8.56.
+\]
+This is consistent with the fact that the kernel tree exposes substantial
+intra-polynomial parallelism while Horner evaluation retains a long
+sequential dependency chain.
+
+\subsection{Best observed optimization run versus final comparison}
+
+During optimization of the Boolean-kernel evaluator alone, the best
+observed \(N=2^{20}\) run was
+\[
+\boxed{892.57\ \mu\mathrm{s}},
+\]
+with interval
+\[
+[884.25,\ 902.65]\ \mu\mathrm{s}.
+\]
+
+The final multi-method sweep measured the same optimized kernel evaluator at
+\[
+1.0560\ \mathrm{ms}.
+\]
+
+We deliberately use the latter number for the cross-basis headline ratio,
+because it was collected in the same benchmark campaign as all competing
+representations.  The lower \(892.57\,\mu\mathrm{s}\) measurement is retained
+as an optimization result and evidence of run-to-run variability, but it is
+not mixed with competitor timings from a different run to construct a
+speedup claim.
+
+This distinction prevents accidental cherry-picking.
+
+\subsection{Optimization ablation}
+
+The optimization campaign reduced the best observed subtree-parallel runtime
+approximately as follows:
+\[
+1.2530
+\rightarrow
+1.2007
+\rightarrow
+1.1619
+\rightarrow
+1.0179
+\rightarrow
+0.93533
+\rightarrow
+0.89257
+\quad\mathrm{ms}.
+\]
+
+The final value is approximately
+\[
+28.8\%
+\]
+below the earlier \(1.2530\)-ms subtree baseline.
+
+The major experimentally validated improvements were:
+
+\begin{enumerate}
+    \item specialized Goldilocks multiplication reduction;
+    \item fused field-level kernel fold;
+    \item elimination of bounds checks in the hot level loop;
+    \item direct first-level reduction into half-size scratch;
+    \item worker-local scratch reuse.
+\end{enumerate}
+
+The isolated microbenchmarks showed approximately:
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Optimization &
+Before &
+After &
+Local improvement \\
+\midrule
+Goldilocks multiplication &
+\(2.2372\) ns &
+\(2.0559\) ns &
+\(8.1\%\) \\
+
+Fused kernel fold &
+\(4.0591\) ns &
+\(3.3585\) ns &
+\(17.3\%\) \\
+
+Unchecked level loop &
+\(6.9671\,\mu\mathrm{s}\) &
+\(6.3575\,\mu\mathrm{s}\) &
+\(8.75\%\) \\
+
+Direct first level &
+\(6.9031\,\mu\mathrm{s}\) &
+\(6.1571\,\mu\mathrm{s}\) &
+\(10.8\%\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These percentages describe the affected primitive or stage and should not be
+added together to predict whole-evaluator speedup.
+
+\subsection{Negative results}
+
+Two-level and three-level tree fusion were both rejected.  In particular,
+the two-level experiment gave
+\[
+9.7019\ \mu\mathrm{s}
+\]
+for the ordinary two-level path and
+\[
+9.8528\ \mu\mathrm{s}
+\]
+for the fused path.
+
+Thus the version with fewer intermediate memory accesses was approximately
+\(1.6\%\) slower.
+
+This result illustrates an important implementation constraint: reducing
+memory traffic does not necessarily improve scalar field code when doing so
+increases dependency depth and register pressure.
+
+\subsection{Interpretation}
+
+The final results establish a narrow but concrete claim:
+
+\begin{quote}
+For arbitrary single-point evaluation of a degree-\(<N\) univariate
+polynomial already stored in the tested representation, the optimized
+Boolean-kernel evaluator is faster than the monomial and roots-of-unity
+Lagrange implementations in our Rust benchmark over Goldilocks on the
+tested Apple M1 machine.
+\end{quote}
+
+At \(N=2^{20}\), the conservative same-run comparison gives a
+\[
+1.337\times
+\]
+advantage over the parallel monomial baseline and a
+\[
+25.2\%
+\]
+reduction in wall-clock evaluation time.
+
+The experiment does not yet establish an end-to-end prover speedup.  That
+requires measuring basis conversion, encoding, commitment, FRI-related
+operations, hashing, and all other protocol costs in an integrated system.

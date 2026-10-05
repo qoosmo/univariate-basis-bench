@@ -41,12 +41,13 @@ Its structure gives a binary evaluation tree whose elementary fold is
 \qquad t=x^{2^i}.
 \]
 We implement and optimize this evaluator over the Goldilocks field.
-For \(N=2^{20}\) on an Apple M1 processor, the optimized implementation
-reaches a measured median runtime of \(892.57\,\mu\mathrm{s}\), corresponding
-to approximately \(1.175\) billion input coefficients per second.
-Under the same benchmark methodology, this is approximately \(1.9\times\)
-faster than our parallel blocked monomial baseline for arbitrary
-single-point evaluation. We describe the evaluation algorithm, its exact
+For \(N=2^{20}\) on an Apple M1 processor, the final same-run
+cross-basis benchmark gives a central estimate of \(1.0560\,\mathrm{ms}\)
+for the optimized Boolean-kernel evaluator and \(1.4116\,\mathrm{ms}\)
+for the parallel blocked monomial baseline.  This corresponds to a
+\(1.337\times\) evaluation-speed advantage, or approximately \(25.2\%\)
+lower wall-clock time.  A separate optimization-only run reached
+\(892.57\,\mu\mathrm{s}\), illustrating the observed run-to-run variation. We describe the evaluation algorithm, its exact
 arithmetic cost, the implementation optimizations responsible for the
 measured speedup, and the limitations of transferring this primitive-level
 gain to complete proof systems.
@@ -57,6 +58,7 @@ gain to complete proof systems.
 \input{sections/03-evaluation-algorithm}
 \input{sections/04-implementation}
 \input{sections/05-methodology}
+\input{sections/06-results}
 
 \bibliographystyle{alpha}
 \bibliography{references}

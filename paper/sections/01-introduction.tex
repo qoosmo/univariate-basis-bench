@@ -92,23 +92,27 @@ For
 \[
 N=2^{20}=1{,}048{,}576,
 \]
-on the tested Apple M1 machine, the optimized Boolean-kernel evaluator
-achieves a median runtime of
+the final same-run cross-basis benchmark on the tested Apple M1 machine
+gives a central estimate of
 \[
-\boxed{892.57\,\mu\mathrm{s}}
+\boxed{1.0560\,\mathrm{ms}}
 \]
-and a throughput of approximately
+for the optimized Boolean-kernel evaluator and
 \[
-\boxed{1.175\times10^9}
+1.4116\,\mathrm{ms}
 \]
-input coefficients per second.
-
-Under the same field implementation and benchmark machine, our parallel
-blocked monomial evaluator requires approximately \(1.70\)--\(1.75\)
-milliseconds at the same size. The measured Boolean-kernel implementation
-therefore uses approximately \(1/1.9\) of the wall-clock time of this
-parallel monomial baseline, i.e. it achieves about \(1.9\times\) the
-evaluation throughput.
+for the blocked parallel monomial evaluator.  Thus the kernel evaluator is
+\[
+\boxed{1.337\times}
+\]
+faster in this controlled comparison, corresponding to approximately
+\[
+\boxed{25.2\%}
+\]
+less wall-clock evaluation time.  During kernel-only optimization, a
+separate run reached \(892.57\,\mu\mathrm{s}\); we report that value as a
+best observed implementation result but do not mix it with competitor
+measurements from another run when computing cross-basis speedups.
 
 This comparison is intentionally an operation-level result. It does
 \emph{not} imply a \(1.9\times\) speedup for a complete STARK, FRI prover,

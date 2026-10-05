@@ -343,7 +343,7 @@ the source coefficient array remains immutable and all workers still read
 their assigned input subtrees directly in parallel.  Only the private
 scratch allocation is reused.
 
-In the controlled full-evaluator comparison, the same-run baseline required
+In the worker-scratch optimization experiment, the same-run baseline required
 \[
 945.77\ \mu\mathrm{s},
 \]
@@ -351,6 +351,8 @@ whereas worker-local scratch reuse required
 \[
 892.57\ \mu\mathrm{s}.
 \]
+This is the best observed kernel-only optimization run; the final
+cross-basis benchmark is reported separately in \cref{sec:results}.
 This corresponds to an improvement of approximately
 \[
 5.6\%

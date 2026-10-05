@@ -1,0 +1,223 @@
+\section{Processor and Measurement Methods}
+\label{sec:methods}
+
+\subsection{Latency and Throughput Definitions}
+\label{sec:latency-throughput}
+
+The execution time of a polynomial evaluator depends on two distinct
+properties of the instruction stream.  The first is the delay introduced by
+a dependency chain.  The second is the rate at which independent
+instructions of the same class can be issued.
+
+A \emph{dependency chain} is a sequence of operations in which each result
+is required by the next operation.  The classical Horner recurrence is the
+simplest example in this study:
+\[
+r_i=a_i+xr_{i+1}.
+\]
+Even if several multiplication units are available, the next multiplication
+cannot begin before the preceding value \(r_{i+1}\) has been produced.
+
+The \emph{latency} of an operation is the delay that it contributes to such
+a dependency chain.  The \emph{throughput} is the rate at which independent
+operations can be completed when enough independent operands are available.
+For the algorithms considered here, neither quantity alone is sufficient.
+A method with a longer local operation sequence can still execute faster if
+many instances of that sequence are independent.
+
+The Boolean-kernel reduction makes this distinction explicit.  At level
+\(i\), all
+\[
+\frac{N}{2^{i+1}}
+\]
+folds are independent, while the transition from one level to the next is a
+true dependency.  The critical path therefore grows with the number of
+levels, \(m=\log_2 N\), rather than with the number of coefficients.
+
+\subsection{Architecture Details}
+\label{sec:architecture}
+
+The measurements reported in this study were obtained on an Apple M1
+processor.  The M1 is an out-of-order superscalar processor.  Several
+integer operations can be in flight simultaneously, provided that the
+instruction scheduler can find independent work.  This property is
+important for the present comparison because Horner evaluation, blocked
+Horner evaluation, and the Boolean-kernel tree expose very different
+amounts of instruction-level and task-level parallelism.
+
+We do not attempt to model the complete microarchitecture.  Only the
+features required to interpret the measurements are considered: independent
+integer multiplication, dependency depth, memory traffic, allocation, and
+the scheduling of independent subtrees across CPU workers.
+
+The field implementation also matters at the instruction level.  A
+Goldilocks multiplication specialized to
+\[
+p=2^{64}-2^{32}+1
+\]
+uses one full-width product followed by shifts, additions, and
+subtractions.  A Montgomery multiplication uses the initial product and an
+additional product involving the reduction coefficient.  Figure
+\ref{fig:field-dag} shows the corresponding dependency structure
+schematically.
+
+\begin{figure}[ht]
+\centering
+\setlength{\unitlength}{0.83mm}
+\begin{picture}(150,65)
+
+\put(5,59){\makebox(60,4)[c]{\small (a) Goldilocks special reduction}}
+\put(95,59){\makebox(48,4)[c]{\small (b) Montgomery reduction}}
+
+% Goldilocks DAG
+\put(12,48){\framebox(18,7){\(a\times b\)}}
+\put(12,35){\framebox(18,7){split hi/lo}}
+\put(7,21){\framebox(28,7){split \(h_0,h_1\)}}
+\put(7,8){\framebox(28,7){shift/add/sub}}
+\put(12,48){\vector(0,-1){6}}
+\put(21,35){\vector(0,-1){7}}
+\put(21,21){\vector(0,-1){6}}
+
+\put(43,48){\framebox(18,7){\(a+b\)}}
+\put(43,35){\framebox(18,7){\(t(a+b)\)}}
+\put(43,21){\framebox(18,7){reduce}}
+\put(43,8){\framebox(18,7){\(+b\)}}
+\put(52,48){\vector(0,-1){6}}
+\put(52,35){\vector(0,-1){7}}
+\put(52,21){\vector(0,-1){6}}
+
+% Montgomery DAG
+\put(94,48){\framebox(20,7){\(T=a b\)}}
+\put(94,35){\framebox(20,7){\(m=T_0n'\)}}
+\put(92,21){\framebox(24,7){\(T+mp\)}}
+\put(94,8){\framebox(20,7){high word}}
+\put(104,48){\vector(0,-1){6}}
+\put(104,35){\vector(0,-1){7}}
+\put(104,21){\vector(0,-1){6}}
+
+\put(126,48){\framebox(20,7){\(\tilde a+\tilde b\)}}
+\put(126,35){\framebox(20,7){MontMul}}
+\put(126,21){\framebox(20,7){\(+\tilde b\)}}
+\put(136,48){\vector(0,-1){6}}
+\put(136,35){\vector(0,-1){7}}
+
+\end{picture}
+\caption{Schematic dependency graphs for the two field-arithmetic paths.
+The left side shows the specialized Goldilocks product reduction and its
+use in the kernel fold; the right side shows the Montgomery reduction path.
+The diagram represents dependencies rather than exact machine
+instructions.}
+\label{fig:field-dag}
+\end{figure}
+
+\subsection{Exact Arithmetic}
+\label{sec:exact-arithmetic}
+
+Unlike floating-point polynomial evaluation, the present computation does
+not involve a numerical approximation error.  Every benchmarked method is
+required to return exactly the same element of \(\mathbb{F}_p\).
+
+Correctness is checked before performance measurements.  The test suite
+compares the optimized Goldilocks multiplication with a reference modular
+multiplication, compares the fused Boolean-kernel fold with its direct field
+expression, verifies the monomial-to-kernel change of basis by evaluating
+the same polynomial in both representations, and verifies the Lagrange
+implementation against the monomial reference.
+
+The Montgomery implementation is subjected to the same requirement.
+Canonical residues are converted to Montgomery form, multiplied there, and
+converted back before comparison with the reference result.  This prevents
+a performance result from being accepted merely because two implementations
+use different internal encodings.
+
+\subsection{Measurement Tools}
+\label{sec:measurement-tools}
+
+The benchmarks are implemented with Criterion.  The principal measurements
+use a warm-up period before sampling and report an interval together with a
+central estimate.  The benchmark harness applies \texttt{black\_box} to
+inputs and results in order to prevent the compiler from replacing the
+measured computation with a constant result.
+
+Microbenchmarks are used for the field operations and the kernel fold.
+Complete polynomial evaluators are measured separately.  This separation is
+important: an improvement in the latency of one multiplication need not
+translate linearly to the full evaluator once memory traffic, worker
+scheduling, and allocation are included.
+
+For cross-method comparisons, all implementations are compiled from the same
+repository revision and executed on the same machine.  A ratio is formed
+only from measurements collected under the same field backend and benchmark
+configuration.
+
+\subsection{Programming Model}
+\label{sec:programming-model}
+
+The implementation is written in Rust.  Parallel work is expressed with
+Rayon.  The monomial baseline divides the coefficient vector into blocks,
+evaluates those blocks independently, and combines the resulting values.
+The Boolean-kernel implementation divides the reduction tree into
+power-of-two subtrees.  Each worker reduces one complete subtree locally,
+thereby avoiding a global synchronization after every tree level.
+
+The optimized kernel evaluator additionally reuses worker-local scratch
+storage.  The first tree level is written directly from the immutable input
+slice into a half-size scratch buffer, after which the remaining local
+levels are performed in place.
+
+The purpose of this implementation strategy is not to alter the arithmetic
+graph derived in Section~\ref{sec:kernel-fold}.  It only changes the
+scheduling and memory traffic of that graph.
+
+\subsection{Processor and Compiler}
+\label{sec:processor-compiler}
+
+Table~\ref{tab:platform} records the platform used for the current
+measurement campaign.  The values are generated from the machine on which
+this manuscript is built.
+
+\begin{table}[ht]
+\centering
+\caption{Processor, compiler, and benchmark environment.}
+\label{tab:platform}
+\begin{tabular}{ll}
+\toprule
+Item & Configuration\\
+\midrule
+Processor & Apple M1\\
+Physical CPU cores & 8\\
+Logical CPU cores & 8\\
+Memory & 16 GiB\\
+Rust compiler & rustc 1.96.0-nightly (55e86c996 2026-04-02)\\
+Cargo & cargo 1.96.0-nightly (888f67534 2026-03-30)\\
+Operating system & Darwin 25.6.0 arm64\\
+Parallel runtime & Rayon\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The benchmarks are compiled in release mode.  The repository configuration
+uses link-time optimization for the performance runs.  No result in the
+paper is taken from a debug build.
+
+\subsection{Validation}
+\label{sec:validation}
+
+A simple consistency check is available before examining the final results.
+The classical Horner method forms one dependency chain, whereas the
+Boolean-kernel evaluator exposes independent folds at every level.  The
+latter should therefore benefit more strongly from multiple workers once
+the problem size is large enough to amortize scheduling overhead.
+
+At small sizes the opposite effect is possible: the overhead of creating
+parallel tasks and managing scratch storage can be comparable to the useful
+work.  The expected behavior is consequently a crossover rather than a
+uniform speedup at all sizes.
+
+The field backend provides a second validation point.  If the
+specialized Goldilocks reduction has a lower isolated multiplication cost
+than Montgomery reduction, this advantage should be visible most clearly in
+the serial Horner benchmark, whose execution is dominated by a chain of
+multiplications.  In the Boolean-kernel evaluator the effect can be reduced
+or amplified by memory traffic and parallel scheduling.  The measurements
+in the following section are interpreted against these two expectations.

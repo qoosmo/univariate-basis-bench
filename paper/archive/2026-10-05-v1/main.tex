@@ -1,0 +1,68 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{hyperref}
+\IfFileExists{cleveref.sty}{\usepackage[nameinlink,noabbrev]{cleveref}}{}
+\providecommand{\cref}[1]{\ref{#1}}
+\providecommand{\Cref}[1]{\ref{#1}}
+
+\title{Fast Single-Point Evaluation of Univariate Polynomials\\
+in the Boolean-Kernel Basis}
+
+\author{Ali Mkhida\\
+Algorizk Labs}
+
+\date{\today}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We study single-point evaluation of large univariate polynomials represented
+in a Boolean-kernel basis and compare it with conventional univariate
+representations relevant to zero-knowledge proof systems. For
+\(N=2^m\), the basis is indexed by \(y\in\{0,1\}^m\) and defined by
+\[
+K_y(X)=\prod_{i=0}^{m-1}\left(X^{2^i}+y_i\right).
+\]
+Its structure gives a binary evaluation tree whose elementary fold is
+\[
+(a,b)\longmapsto t(a+b)+b,
+\qquad t=x^{2^i}.
+\]
+We implement and optimize this evaluator over the Goldilocks field.
+For \(N=2^{20}\) on an Apple M1 processor, the final same-run
+cross-basis benchmark gives a central estimate of \(1.0560\,\mathrm{ms}\)
+for the optimized Boolean-kernel evaluator and \(1.4116\,\mathrm{ms}\)
+for the parallel blocked monomial baseline.  This corresponds to a
+\(1.337\times\) evaluation-speed advantage, or approximately \(25.2\%\)
+lower wall-clock time.  A separate optimization-only run reached
+\(892.57\,\mu\mathrm{s}\), illustrating the observed run-to-run variation. We describe the evaluation algorithm, its exact
+arithmetic cost, the implementation optimizations responsible for the
+measured speedup, and the limitations of transferring this primitive-level
+gain to complete proof systems.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-representations}
+\input{sections/03-evaluation-algorithm}
+\input{sections/04-implementation}
+\input{sections/05-methodology}
+\input{sections/06-results}
+\input{sections/07-proof-systems}
+\input{sections/08-conclusion}
+
+\bibliographystyle{alpha}
+\bibliography{references}
+
+\end{document}

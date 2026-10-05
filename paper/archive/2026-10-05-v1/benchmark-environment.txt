@@ -1,0 +1,36 @@
+Benchmark environment
+=====================
+
+Date:
+Mon Oct  5 09:53:01 +03 2026
+
+Git commit:
+427448a5a5c2958a6279687df6bc8b2b7996b6ba
+
+Git branch:
+master
+
+Rust:
+rustc 1.96.0-nightly (55e86c996 2026-04-02)
+cargo 1.96.0-nightly (888f67534 2026-03-30)
+
+Host:
+Darwin 172-2-0-203.lightspeed.dybhfl.sbcglobal.net 25.6.0 Darwin Kernel Version 25.6.0: Fri Jul 31 19:17:12 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T8103 arm64
+
+CPU / memory:
+brand: Apple M1
+model: MacBookPro17,1
+ncpu: 8
+physicalcpu: 8
+logicalcpu: 8
+memsize: 17179869184
+
+Rayon threads:
+not explicitly set; Rayon default used
+
+Release profile:
+[profile.release]
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+

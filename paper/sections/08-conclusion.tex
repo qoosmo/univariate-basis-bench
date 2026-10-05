@@ -1,0 +1,94 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We studied arbitrary single-point evaluation of degree-\(<N\) univariate
+polynomials represented in the Boolean-kernel basis
+\[
+K_y(X)
+=
+\prod_{i=0}^{m-1}
+\left(X^{2^i}+y_i\right),
+\qquad
+N=2^m,
+\qquad
+y\in\{0,1\}^m.
+\]
+
+The representation admits the local fold
+\[
+F_t(a,b)=t(a+b)+b,
+\qquad
+t=x^{2^i},
+\]
+which evaluates the polynomial through a complete binary reduction tree.
+The tree contains exactly
+\[
+N-1
+\]
+folds and therefore requires exactly
+\[
+N-1
+\]
+field multiplications and
+\[
+2(N-1)
+\]
+field additions, together with
+\[
+m-1
+\]
+squarings to generate the level parameters.
+
+On the implementation side, the final Rust evaluator combines
+coarse-grained subtree parallelism, specialized Goldilocks reduction,
+a fused kernel fold, bounds-check elimination in the hot loop, direct
+first-level reduction, and worker-local scratch reuse.
+
+For
+\[
+N=2^{20},
+\]
+the final same-run benchmark on the tested Apple M1 system measured
+\[
+1.0560\ \mathrm{ms}
+\]
+for the optimized Boolean-kernel evaluator and
+\[
+1.4116\ \mathrm{ms}
+\]
+for the blocked parallel monomial baseline.  This corresponds to a
+\[
+\boxed{1.337\times}
+\]
+evaluation-speed advantage, or approximately
+\[
+\boxed{25.2\%}
+\]
+lower wall-clock time for the isolated arbitrary-point evaluation
+primitive.
+
+A separate kernel-only optimization run reached
+\[
+892.57\,\mu\mathrm{s},
+\]
+but we do not combine that number with competitor timings collected in a
+different run when computing cross-basis speedups.
+
+The comparison with the roots-of-unity Lagrange representation shows an
+even larger difference for arbitrary off-domain evaluation.  At
+\(N=2^{20}\), the measured parallel Lagrange evaluator required
+\(17.199\) ms.  This does not imply that evaluation form is generally
+inferior in proof systems; rather, it emphasizes that representation choice
+is workload-dependent.
+
+The central systems question is therefore not whether the Boolean-kernel
+basis supports fast single-point evaluation---the experiments establish that
+it does---but whether a prover can retain this representation across enough
+of its pipeline that conversion, encoding, commitment, and FRI-related
+costs do not erase the local advantage.
+
+Future work should measure that representation lifetime directly inside a
+complete transparent proof system, including basis conversion, repeated
+off-domain queries, commitment, and FRI integration.  Only such an
+end-to-end study can determine how much of the isolated evaluator speedup
+survives at prover scale.

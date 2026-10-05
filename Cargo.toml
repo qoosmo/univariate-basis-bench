@@ -20,3 +20,32 @@ harness = false
 codegen-units = 1
 lto = "fat"
 panic = "abort"
+
+[[bench]]
+name = "field_mul"
+harness = false
+
+[[bench]]
+name = "kernel_level"
+harness = false
+
+[[bench]]
+name = "first_level"
+harness = false
+
+[[bench]]
+name = "block_sweep"
+harness = false
+
+[[bench]]
+name = "block_final"
+harness = false
+
+[[bench]]
+name = "two_level"
+harness = false
+
+[[bench]]
+name = "final_bases"
+harness = false
+

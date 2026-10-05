@@ -1,0 +1,305 @@
+   Compiling univariate-basis-bench v0.1.0 (/Users/alimkhida/Documents/Projects/univariate-basis-bench)
+    Finished `bench` profile [optimized] target(s) in 24.01s
+     Running benches/final_bases.rs (target/release/deps/final_bases-c1e093c7fa47366c)
+Benchmarking final_basis_comparison/kernel_optimized/1024
+Benchmarking final_basis_comparison/kernel_optimized/1024: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/kernel_optimized/1024: Collecting 50 samples in estimated 10.001 s (2.3M iterations)
+Benchmarking final_basis_comparison/kernel_optimized/1024: Analyzing
+final_basis_comparison/kernel_optimized/1024
+                        time:   [4.3420 µs 4.3432 µs 4.3444 µs]
+                        thrpt:  [235.70 Melem/s 235.77 Melem/s 235.84 Melem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/monomial_parallel_4096/1024
+Benchmarking final_basis_comparison/monomial_parallel_4096/1024: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_parallel_4096/1024: Collecting 50 samples in estimated 10.007 s (1.2M iterations)
+Benchmarking final_basis_comparison/monomial_parallel_4096/1024: Analyzing
+final_basis_comparison/monomial_parallel_4096/1024
+                        time:   [8.6100 µs 8.6129 µs 8.6159 µs]
+                        thrpt:  [118.85 Melem/s 118.89 Melem/s 118.93 Melem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) low mild
+  2 (4.00%) high mild
+Benchmarking final_basis_comparison/monomial_horner/1024
+Benchmarking final_basis_comparison/monomial_horner/1024: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_horner/1024: Collecting 50 samples in estimated 10.004 s (1.1M iterations)
+Benchmarking final_basis_comparison/monomial_horner/1024: Analyzing
+final_basis_comparison/monomial_horner/1024
+                        time:   [8.7054 µs 8.7080 µs 8.7112 µs]
+                        thrpt:  [117.55 Melem/s 117.59 Melem/s 117.63 Melem/s]
+Benchmarking final_basis_comparison/lagrange_parallel/1024
+Benchmarking final_basis_comparison/lagrange_parallel/1024: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_parallel/1024: Collecting 50 samples in estimated 10.086 s (92k iterations)
+Benchmarking final_basis_comparison/lagrange_parallel/1024: Analyzing
+final_basis_comparison/lagrange_parallel/1024
+                        time:   [109.43 µs 109.71 µs 109.99 µs]
+                        thrpt:  [9.3103 Melem/s 9.3336 Melem/s 9.3579 Melem/s]
+Found 6 outliers among 50 measurements (12.00%)
+  3 (6.00%) high mild
+  3 (6.00%) high severe
+Benchmarking final_basis_comparison/lagrange_serial/1024
+Benchmarking final_basis_comparison/lagrange_serial/1024: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_serial/1024: Collecting 50 samples in estimated 10.004 s (464k iterations)
+Benchmarking final_basis_comparison/lagrange_serial/1024: Analyzing
+final_basis_comparison/lagrange_serial/1024
+                        time:   [21.515 µs 21.612 µs 21.832 µs]
+                        thrpt:  [46.903 Melem/s 47.382 Melem/s 47.595 Melem/s]
+Found 5 outliers among 50 measurements (10.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+  3 (6.00%) high severe
+Benchmarking final_basis_comparison/kernel_optimized/4096
+Benchmarking final_basis_comparison/kernel_optimized/4096: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/kernel_optimized/4096: Collecting 50 samples in estimated 10.019 s (590k iterations)
+Benchmarking final_basis_comparison/kernel_optimized/4096: Analyzing
+final_basis_comparison/kernel_optimized/4096
+                        time:   [16.958 µs 16.975 µs 17.005 µs]
+                        thrpt:  [240.88 Melem/s 241.30 Melem/s 241.53 Melem/s]
+Found 4 outliers among 50 measurements (8.00%)
+  2 (4.00%) high mild
+  2 (4.00%) high severe
+Benchmarking final_basis_comparison/monomial_parallel_4096/4096
+Benchmarking final_basis_comparison/monomial_parallel_4096/4096: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_parallel_4096/4096: Collecting 50 samples in estimated 10.037 s (291k iterations)
+Benchmarking final_basis_comparison/monomial_parallel_4096/4096: Analyzing
+final_basis_comparison/monomial_parallel_4096/4096
+                        time:   [34.544 µs 34.599 µs 34.675 µs]
+                        thrpt:  [118.13 Melem/s 118.38 Melem/s 118.57 Melem/s]
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high severe
+Benchmarking final_basis_comparison/monomial_horner/4096
+Benchmarking final_basis_comparison/monomial_horner/4096: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_horner/4096: Collecting 50 samples in estimated 10.008 s (284k iterations)
+Benchmarking final_basis_comparison/monomial_horner/4096: Analyzing
+final_basis_comparison/monomial_horner/4096
+                        time:   [35.227 µs 35.491 µs 35.895 µs]
+                        thrpt:  [114.11 Melem/s 115.41 Melem/s 116.27 Melem/s]
+Found 10 outliers among 50 measurements (20.00%)
+  4 (8.00%) high mild
+  6 (12.00%) high severe
+Benchmarking final_basis_comparison/lagrange_parallel/4096
+Benchmarking final_basis_comparison/lagrange_parallel/4096: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_parallel/4096: Collecting 50 samples in estimated 10.326 s (40k iterations)
+Benchmarking final_basis_comparison/lagrange_parallel/4096: Analyzing
+final_basis_comparison/lagrange_parallel/4096
+                        time:   [236.68 µs 250.22 µs 267.85 µs]
+                        thrpt:  [15.292 Melem/s 16.370 Melem/s 17.306 Melem/s]
+Found 4 outliers among 50 measurements (8.00%)
+  3 (6.00%) high mild
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/lagrange_serial/4096
+Benchmarking final_basis_comparison/lagrange_serial/4096: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_serial/4096: Collecting 50 samples in estimated 10.041 s (119k iterations)
+Benchmarking final_basis_comparison/lagrange_serial/4096: Analyzing
+final_basis_comparison/lagrange_serial/4096
+                        time:   [84.245 µs 84.269 µs 84.299 µs]
+                        thrpt:  [48.589 Melem/s 48.606 Melem/s 48.620 Melem/s]
+Found 4 outliers among 50 measurements (8.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+  2 (4.00%) high severe
+Benchmarking final_basis_comparison/kernel_optimized/16384
+Benchmarking final_basis_comparison/kernel_optimized/16384: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/kernel_optimized/16384: Collecting 50 samples in estimated 10.030 s (187k iterations)
+Benchmarking final_basis_comparison/kernel_optimized/16384: Analyzing
+final_basis_comparison/kernel_optimized/16384
+                        time:   [56.171 µs 59.153 µs 62.849 µs]
+                        thrpt:  [260.69 Melem/s 276.98 Melem/s 291.68 Melem/s]
+Found 4 outliers among 50 measurements (8.00%)
+  4 (8.00%) high severe
+Benchmarking final_basis_comparison/monomial_parallel_4096/16384
+Benchmarking final_basis_comparison/monomial_parallel_4096/16384: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_parallel_4096/16384: Collecting 50 samples in estimated 10.046 s (142k iterations)
+Benchmarking final_basis_comparison/monomial_parallel_4096/16384: Analyzing
+final_basis_comparison/monomial_parallel_4096/16384
+                        time:   [68.646 µs 69.174 µs 69.932 µs]
+                        thrpt:  [234.29 Melem/s 236.85 Melem/s 238.68 Melem/s]
+Found 5 outliers among 50 measurements (10.00%)
+  3 (6.00%) low mild
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/monomial_horner/16384
+Benchmarking final_basis_comparison/monomial_horner/16384: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_horner/16384: Collecting 50 samples in estimated 10.155 s (73k iterations)
+Benchmarking final_basis_comparison/monomial_horner/16384: Analyzing
+final_basis_comparison/monomial_horner/16384
+                        time:   [140.31 µs 146.72 µs 154.30 µs]
+                        thrpt:  [106.19 Melem/s 111.66 Melem/s 116.77 Melem/s]
+Found 5 outliers among 50 measurements (10.00%)
+  1 (2.00%) high mild
+  4 (8.00%) high severe
+Benchmarking final_basis_comparison/lagrange_parallel/16384
+Benchmarking final_basis_comparison/lagrange_parallel/16384: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_parallel/16384: Collecting 50 samples in estimated 10.355 s (19k iterations)
+Benchmarking final_basis_comparison/lagrange_parallel/16384: Analyzing
+final_basis_comparison/lagrange_parallel/16384
+                        time:   [438.30 µs 439.93 µs 441.98 µs]
+                        thrpt:  [37.070 Melem/s 37.243 Melem/s 37.381 Melem/s]
+Found 7 outliers among 50 measurements (14.00%)
+  4 (8.00%) high mild
+  3 (6.00%) high severe
+Benchmarking final_basis_comparison/lagrange_serial/16384
+Benchmarking final_basis_comparison/lagrange_serial/16384: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_serial/16384: Collecting 50 samples in estimated 10.295 s (31k iterations)
+Benchmarking final_basis_comparison/lagrange_serial/16384: Analyzing
+final_basis_comparison/lagrange_serial/16384
+                        time:   [333.92 µs 334.24 µs 334.60 µs]
+                        thrpt:  [48.966 Melem/s 49.019 Melem/s 49.066 Melem/s]
+Found 6 outliers among 50 measurements (12.00%)
+  3 (6.00%) high mild
+  3 (6.00%) high severe
+Benchmarking final_basis_comparison/kernel_optimized/65536
+Benchmarking final_basis_comparison/kernel_optimized/65536: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/kernel_optimized/65536: Collecting 50 samples in estimated 10.011 s (106k iterations)
+Benchmarking final_basis_comparison/kernel_optimized/65536: Analyzing
+final_basis_comparison/kernel_optimized/65536
+                        time:   [90.860 µs 91.116 µs 91.373 µs]
+                        thrpt:  [717.24 Melem/s 719.26 Melem/s 721.29 Melem/s]
+Found 6 outliers among 50 measurements (12.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+  4 (8.00%) high severe
+Benchmarking final_basis_comparison/monomial_parallel_4096/65536
+Benchmarking final_basis_comparison/monomial_parallel_4096/65536: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_parallel_4096/65536: Collecting 50 samples in estimated 10.127 s (73k iterations)
+Benchmarking final_basis_comparison/monomial_parallel_4096/65536: Analyzing
+final_basis_comparison/monomial_parallel_4096/65536
+                        time:   [137.97 µs 139.48 µs 141.83 µs]
+                        thrpt:  [462.08 Melem/s 469.85 Melem/s 474.99 Melem/s]
+Found 10 outliers among 50 measurements (20.00%)
+  3 (6.00%) low mild
+  3 (6.00%) high mild
+  4 (8.00%) high severe
+Benchmarking final_basis_comparison/monomial_horner/65536
+Benchmarking final_basis_comparison/monomial_horner/65536: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_horner/65536: Collecting 50 samples in estimated 10.690 s (19k iterations)
+Benchmarking final_basis_comparison/monomial_horner/65536: Analyzing
+final_basis_comparison/monomial_horner/65536
+                        time:   [558.56 µs 558.91 µs 559.37 µs]
+                        thrpt:  [117.16 Melem/s 117.26 Melem/s 117.33 Melem/s]
+Found 7 outliers among 50 measurements (14.00%)
+  3 (6.00%) high mild
+  4 (8.00%) high severe
+Benchmarking final_basis_comparison/lagrange_parallel/65536
+Benchmarking final_basis_comparison/lagrange_parallel/65536: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_parallel/65536: Collecting 50 samples in estimated 11.258 s (8925 iterations)
+Benchmarking final_basis_comparison/lagrange_parallel/65536: Analyzing
+final_basis_comparison/lagrange_parallel/65536
+                        time:   [1.2457 ms 1.2503 ms 1.2561 ms]
+                        thrpt:  [52.172 Melem/s 52.415 Melem/s 52.609 Melem/s]
+Found 4 outliers among 50 measurements (8.00%)
+  1 (2.00%) low mild
+  3 (6.00%) high severe
+Benchmarking final_basis_comparison/lagrange_serial/65536
+Benchmarking final_basis_comparison/lagrange_serial/65536: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_serial/65536: Collecting 50 samples in estimated 10.231 s (7650 iterations)
+Benchmarking final_basis_comparison/lagrange_serial/65536: Analyzing
+final_basis_comparison/lagrange_serial/65536
+                        time:   [1.3382 ms 1.3391 ms 1.3398 ms]
+                        thrpt:  [48.913 Melem/s 48.941 Melem/s 48.972 Melem/s]
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+Benchmarking final_basis_comparison/kernel_optimized/262144
+Benchmarking final_basis_comparison/kernel_optimized/262144: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/kernel_optimized/262144: Collecting 50 samples in estimated 10.326 s (36k iterations)
+Benchmarking final_basis_comparison/kernel_optimized/262144: Analyzing
+final_basis_comparison/kernel_optimized/262144
+                        time:   [255.91 µs 263.23 µs 275.17 µs]
+                        thrpt:  [952.65 Melem/s 995.86 Melem/s 1.0244 Gelem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) high mild
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/monomial_parallel_4096/262144
+Benchmarking final_basis_comparison/monomial_parallel_4096/262144: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_parallel_4096/262144: Collecting 50 samples in estimated 10.253 s (26k iterations)
+Benchmarking final_basis_comparison/monomial_parallel_4096/262144: Analyzing
+final_basis_comparison/monomial_parallel_4096/262144
+                        time:   [378.64 µs 380.91 µs 383.63 µs]
+                        thrpt:  [683.33 Melem/s 688.21 Melem/s 692.34 Melem/s]
+Found 5 outliers among 50 measurements (10.00%)
+  5 (10.00%) high mild
+Benchmarking final_basis_comparison/monomial_horner/262144
+Benchmarking final_basis_comparison/monomial_horner/262144: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_horner/262144: Collecting 50 samples in estimated 11.553 s (5100 iterations)
+Benchmarking final_basis_comparison/monomial_horner/262144: Analyzing
+final_basis_comparison/monomial_horner/262144
+                        time:   [2.2404 ms 2.2440 ms 2.2483 ms]
+                        thrpt:  [116.60 Melem/s 116.82 Melem/s 117.01 Melem/s]
+Found 5 outliers among 50 measurements (10.00%)
+  3 (6.00%) high mild
+  2 (4.00%) high severe
+Benchmarking final_basis_comparison/lagrange_parallel/262144
+Benchmarking final_basis_comparison/lagrange_parallel/262144: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_parallel/262144: Collecting 50 samples in estimated 11.581 s (2550 iterations)
+Benchmarking final_basis_comparison/lagrange_parallel/262144: Analyzing
+final_basis_comparison/lagrange_parallel/262144
+                        time:   [4.5329 ms 4.5612 ms 4.6033 ms]
+                        thrpt:  [56.946 Melem/s 57.472 Melem/s 57.831 Melem/s]
+Found 7 outliers among 50 measurements (14.00%)
+  3 (6.00%) high mild
+  4 (8.00%) high severe
+Benchmarking final_basis_comparison/lagrange_serial/262144
+Benchmarking final_basis_comparison/lagrange_serial/262144: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_serial/262144: Collecting 50 samples in estimated 13.638 s (2550 iterations)
+Benchmarking final_basis_comparison/lagrange_serial/262144: Analyzing
+final_basis_comparison/lagrange_serial/262144
+                        time:   [5.3635 ms 5.3679 ms 5.3726 ms]
+                        thrpt:  [48.793 Melem/s 48.836 Melem/s 48.876 Melem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) low mild
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/kernel_optimized/1048576
+Benchmarking final_basis_comparison/kernel_optimized/1048576: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/kernel_optimized/1048576: Collecting 50 samples in estimated 10.470 s (11k iterations)
+Benchmarking final_basis_comparison/kernel_optimized/1048576: Analyzing
+final_basis_comparison/kernel_optimized/1048576
+                        time:   [1.0009 ms 1.0560 ms 1.1132 ms]
+                        thrpt:  [941.99 Melem/s 992.96 Melem/s 1.0476 Gelem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) high mild
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/monomial_parallel_4096/1048576
+Benchmarking final_basis_comparison/monomial_parallel_4096/1048576: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/monomial_parallel_4096/1048576: Collecting 50 samples in estimated 10.424 s (6375 iterations)
+Benchmarking final_basis_comparison/monomial_parallel_4096/1048576: Analyzing
+final_basis_comparison/monomial_parallel_4096/1048576
+                        time:   [1.3984 ms 1.4116 ms 1.4282 ms]
+                        thrpt:  [734.19 Melem/s 742.83 Melem/s 749.82 Melem/s]
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/monomial_horner/1048576
+Benchmarking final_basis_comparison/monomial_horner/1048576: Warming up for 5.0000 s
+
+Warning: Unable to complete 50 samples in 10.0s. You may wish to increase target time to 11.5s, enable flat sampling, or reduce sample count to 30.
+Benchmarking final_basis_comparison/monomial_horner/1048576: Collecting 50 samples in estimated 11.547 s (1275 iterations)
+Benchmarking final_basis_comparison/monomial_horner/1048576: Analyzing
+final_basis_comparison/monomial_horner/1048576
+                        time:   [9.0334 ms 9.0402 ms 9.0475 ms]
+                        thrpt:  [115.90 Melem/s 115.99 Melem/s 116.08 Melem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) low mild
+  1 (2.00%) high mild
+Benchmarking final_basis_comparison/lagrange_parallel/1048576
+Benchmarking final_basis_comparison/lagrange_parallel/1048576: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_parallel/1048576: Collecting 50 samples in estimated 10.835 s (600 iterations)
+Benchmarking final_basis_comparison/lagrange_parallel/1048576: Analyzing
+final_basis_comparison/lagrange_parallel/1048576
+                        time:   [17.150 ms 17.199 ms 17.262 ms]
+                        thrpt:  [60.744 Melem/s 60.968 Melem/s 61.142 Melem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) high mild
+  1 (2.00%) high severe
+Benchmarking final_basis_comparison/lagrange_serial/1048576
+Benchmarking final_basis_comparison/lagrange_serial/1048576: Warming up for 5.0000 s
+Benchmarking final_basis_comparison/lagrange_serial/1048576: Collecting 50 samples in estimated 10.716 s (500 iterations)
+Benchmarking final_basis_comparison/lagrange_serial/1048576: Analyzing
+final_basis_comparison/lagrange_serial/1048576
+                        time:   [21.381 ms 21.389 ms 21.396 ms]
+                        thrpt:  [49.008 Melem/s 49.025 Melem/s 49.041 Melem/s]
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) low mild
+  2 (4.00%) high mild
+
